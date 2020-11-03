@@ -1,6 +1,6 @@
 #pragma once
 
-#include "thread.h"
+#include "Thread.h"
 #include "pthread.h"
 #include "dns_sd.h"
 

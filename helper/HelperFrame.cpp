@@ -46,7 +46,7 @@ HelperFrame::HelperFrame(const wxString &title) : wxFrame(nullptr, wxID_ANY, tit
     panel->SetSizerAndFit(rootSizer);
 
     //Bind Events
-    Bind(wxEVT_THREAD, &HelperFrame::OnAnchorFound);
+    Bind(wxEVT_THREAD, &HelperFrame::OnAnchorFound, this, ids::ANCHOR_FOUND);
 }
 
 HelperFrame::~HelperFrame()

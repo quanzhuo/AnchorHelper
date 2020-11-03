@@ -7,7 +7,7 @@ set(SRC
     Shutdown.cpp
 )
 
-find_package(wxWidgets REQUIRED COMPONENTS base core net)
+find_package(wxWidgets REQUIRED COMPONENTS base core adv)
 include(${wxWidgets_USE_FILE})
 add_executable(AnchorHelper WIN32 ${SRC})
 target_link_libraries(AnchorHelper PRIVATE pthread dnssd ${wxWidgets_LIBRARIES})
@@ -25,5 +25,5 @@ if(MSVC)
     )
 elseif(UNIX)
     target_include_directories(AnchorHelper PRIVATE ../dnssd)
-        target_compile_options(zzdcle PUBLIC -pthread)
+    target_compile_options(AnchorHelper PUBLIC -pthread)
 endif()

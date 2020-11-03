@@ -1,7 +1,7 @@
 #include "Discovery.h"
 #include "Socket.h"
 #include "SocketCompat.h"
-#include "shutdown.h"
+#include "Shutdown.h"
 #include "HelperApp.h"
 
 #include <cstdio>
