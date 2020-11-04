@@ -11,18 +11,7 @@ HelperFrame::HelperFrame(const wxString &title) : wxFrame(nullptr, wxID_ANY, tit
     listCtrl->AppendTextColumn(_T("Index"), wxDATAVIEW_CELL_INERT, wxCOL_WIDTH_AUTOSIZE, wxALIGN_CENTER);
     listCtrl->AppendTextColumn(_T("Anchor ID"), wxDATAVIEW_CELL_INERT, wxCOL_WIDTH_AUTOSIZE, wxALIGN_CENTER);
     listCtrl->AppendTextColumn(_T("IP Address"), wxDATAVIEW_CELL_EDITABLE, wxCOL_WIDTH_AUTOSIZE, wxALIGN_CENTER);
-
-    // wxVector<wxVariant> data;
-    // data.push_back(wxVariant("1"));
-    // data.push_back(wxVariant("82B31061144CE8B"));
-    // data.push_back(wxVariant("192.168.1.1"));
-    // listCtrl->AppendItem(data);
-
-    // data.clear();
-    // data.push_back(wxVariant("2"));
-    // data.push_back(wxVariant("82B31061144CE8B"));
-    // data.push_back(wxVariant("192.168.1.1"));
-    // listCtrl->AppendItem(data);
+    listCtrl->AppendTextColumn(_T("Status"), wxDATAVIEW_CELL_INERT, wxCOL_WIDTH_AUTOSIZE, wxALIGN_CENTER);
     rootSizer->Add(listCtrl, wxSizerFlags(1).Expand().Border());
 
     m_pLogCtrl = new wxTextCtrl(panel, wxID_ANY, wxString(), wxDefaultPosition, wxDefaultSize, wxTE_MULTILINE);
@@ -33,16 +22,15 @@ HelperFrame::HelperFrame(const wxString &title) : wxFrame(nullptr, wxID_ANY, tit
 
     wxSizer *btnSizer = new wxBoxSizer(wxHORIZONTAL);
     wxButton *btnOk = new wxButton(panel, wxID_OK);
+    btnOk->Bind(wxEVT_BUTTON, &HelperFrame::OnBtnOk, this);
     wxButton *btnClear = new wxButton(panel, wxID_CLEAR);
+    btnClear->Bind(wxEVT_BUTTON, &HelperFrame::OnClearLog, this);
     btnSizer->AddStretchSpacer(1);
     btnSizer->Add(btnClear, wxSizerFlags().Border());
     btnSizer->AddStretchSpacer(1);
     btnSizer->Add(btnOk, wxSizerFlags().Border());
     btnSizer->AddStretchSpacer(1);
     rootSizer->Add(btnSizer, wxSizerFlags().Border().Expand());
-
-    // panel->SetSizer(rootSizer);
-    // rootSizer->SetSizeHints(this);
     panel->SetSizerAndFit(rootSizer);
 
     //Bind Events
@@ -62,4 +50,13 @@ void HelperFrame::OnAnchorFound(wxThreadEvent &event)
     data.push_back(wxVariant(std::to_string(info.id)));
     data.push_back(wxVariant(info.ip));
     listCtrl->AppendItem(data);
+}
+
+void HelperFrame::OnClearLog(wxCommandEvent &event)
+{
+    m_pLogCtrl->Clear();
+}
+
+void HelperFrame::OnBtnOk(wxCommandEvent &event)
+{
 }

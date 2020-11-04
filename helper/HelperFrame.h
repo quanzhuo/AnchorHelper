@@ -16,6 +16,8 @@ public:
 
 private:
     void OnAnchorFound(wxThreadEvent &event);
+    void OnClearLog(wxCommandEvent &event);
+    void OnBtnOk(wxCommandEvent &event);
 
 private:
     wxTextCtrl *m_pLogCtrl;
