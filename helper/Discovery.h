@@ -18,20 +18,7 @@ typedef struct in_addr IN_ADDR;
 #endif
 
 #include "HelperFrame.h"
-
-namespace ids
-{
-    constexpr int ANCHOR_FOUND = 100;
-}
-
-namespace types
-{
-    using AnchorInfo = struct
-    {
-        uint64_t id;
-        std::string ip;
-    };
-} // namespace types
+#include "Types.h"
 
 class Discovery : public Thread
 {

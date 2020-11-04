@@ -1,5 +1,7 @@
 #include "HelperFrame.h"
 #include "Discovery.h"
+#include "Connection.h"
+#include <sstream>
 
 HelperFrame::HelperFrame(const wxString &title) : wxFrame(nullptr, wxID_ANY, title), index(1)
 {
@@ -30,11 +32,13 @@ HelperFrame::HelperFrame(const wxString &title) : wxFrame(nullptr, wxID_ANY, tit
     btnSizer->AddStretchSpacer(1);
     btnSizer->Add(btnOk, wxSizerFlags().Border());
     btnSizer->AddStretchSpacer(1);
+
     rootSizer->Add(btnSizer, wxSizerFlags().Border().Expand());
     panel->SetSizerAndFit(rootSizer);
 
-    //Bind Events
-    Bind(wxEVT_THREAD, &HelperFrame::OnAnchorFound, this, ids::ANCHOR_FOUND);
+    //Bind Thread Events to handers
+    Bind(wxEVT_THREAD, &HelperFrame::OnAnchorFound, this, helper::ids::ANCHOR_FOUND);
+    Bind(wxEVT_THREAD, &HelperFrame::OnProgressUpdate, this, helper::ids::PROGRESS_UPDATE);
 }
 
 HelperFrame::~HelperFrame()
@@ -44,11 +48,12 @@ HelperFrame::~HelperFrame()
 
 void HelperFrame::OnAnchorFound(wxThreadEvent &event)
 {
-    auto info = event.GetPayload<types::AnchorInfo>();
+    auto info = event.GetPayload<helper::types::AnchorInfo>();
+    m_anc_ip[info.id] = info.ip;
     wxVector<wxVariant> data;
     data.push_back(wxVariant(index++));
     data.push_back(wxVariant(std::to_string(info.id)));
-    data.push_back(wxVariant(info.ip));
+    data.push_back(wxVariant(inet_ntoa(info.ip)));
     listCtrl->AppendItem(data);
 }
 
@@ -59,4 +64,103 @@ void HelperFrame::OnClearLog(wxCommandEvent &event)
 
 void HelperFrame::OnBtnOk(wxCommandEvent &event)
 {
+    //1. 扫描出来用户设置的所有基站ip
+    unsigned count = listCtrl->GetItemCount();
+    for (unsigned i = 0; i < count; ++i)
+    {
+        std::string id_str = listCtrl->GetTextValue(i, 1);
+        std::string ip_str = listCtrl->GetTextValue(i, 2);
+        std::stringstream ss;
+        uint64_t id;
+        ss.str(id_str);
+        ss >> id;
+        unsigned long ip_int = inet_addr(ip_str.c_str());
+        struct in_addr ip;
+        memcpy(&ip, &ip_int, 4);
+        m_anc_new_ip[id] = ip;
+    }
+
+    (new TryConnect())->Start();
+}
+
+bool HelperFrame::ConnectToAnchor(helper::types::AnchorInfo &info)
+{
+    wxLogMessage("Connect to anchor, id: %16llx, ip: %s", info.id, inet_ntoa(info.ip));
+
+    bool ret = true;
+    // pthread_mutex_lock(&lock);
+
+    sockaddr_in addr;
+    addr.sin_family = AF_INET;
+    addr.sin_addr = info.ip;
+    addr.sin_port = htons(3000);
+
+    try
+    {
+        Socket *sock;
+        try
+        {
+            sock = new SocketClient(addr);
+        }
+        catch (std::string e)
+        {
+            throw((std::string)("Socket error"));
+        }
+
+        AnchorConnection *conn = new AnchorConnection(sock, info);
+        conn->Start();
+    }
+    catch (std::string e)
+    {
+        wxLogMessage("ConnectToAnchor : %s to %s", e.c_str(), inet_ntoa(info.ip));
+        ret = false;
+    }
+
+    // pthread_mutex_unlock(&lock);
+
+    return ret;
+}
+
+void HelperFrame::OnProgressUpdate(wxThreadEvent &event)
+{
+    auto info = event.GetPayload<helper::types::StatusInfo>();
+    unsigned count = listCtrl->GetItemCount();
+    for (unsigned i = 0; i < count; ++i)
+    {
+        std::string id_str = listCtrl->GetTextValue(i, 1);
+        std::stringstream ss;
+        uint64_t id;
+        ss.str(id_str);
+        ss >> id;
+        if (id == info.id)
+        {
+            wxString text = GetStatusText(info.status);
+            listCtrl->SetTextValue(text, i, 3);
+            break;
+        }
+    }
+}
+
+wxString HelperFrame::GetStatusText(helper::types::Status s)
+{
+    using namespace helper::types;
+    wxString text;
+    switch (s)
+    {
+    case Status::CONNECTED:
+        text = _T("Connected");
+        break;
+    case Status::CONNECT_FAILED:
+        text = _T("Connect Failed");
+        break;
+    case Status::DONE:
+        text = _T("Done");
+        break;
+    case Status::SETTING_IP:
+        text = _T("Setting IP");
+        break;
+    default:
+        break;
+    }
+    return text;
 }

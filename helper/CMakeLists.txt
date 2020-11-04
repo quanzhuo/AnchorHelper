@@ -5,6 +5,8 @@ set(SRC
     Socket.cpp
     SocketCompat.c
     Shutdown.cpp
+    Connection.cpp
+    crc16.cpp
 )
 
 find_package(wxWidgets REQUIRED COMPONENTS base core adv)

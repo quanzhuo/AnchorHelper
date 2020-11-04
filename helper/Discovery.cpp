@@ -110,12 +110,9 @@ void DNSSD_API Discovery::AddrInfoReply(DNSServiceRef sdref, const DNSServiceFla
     s->ip.s_addr = htonl(b->s_addr);
     s->ip.s_addr = ntohl(s->ip.s_addr);
 
-    // Anchor *anc = s->self->db->findAnchor(s->id);
-    // Anchor *aanc = s->self->db->findInAllAnchor(s->id);
     wxLogMessage("Anchor %16llx found on %s", s->id, inet_ntoa(s->ip));
-
-    wxThreadEvent event{wxEVT_THREAD, ids::ANCHOR_FOUND};
-    types::AnchorInfo anc_info{s->id, inet_ntoa(s->ip)};
+    helper::types::AnchorInfo anc_info{s->id, s->ip};
+    wxThreadEvent event{wxEVT_THREAD, helper::ids::ANCHOR_FOUND};
     event.SetPayload(anc_info);
     wxQueueEvent(wxGetApp().GetFrame(), event.Clone());
 
