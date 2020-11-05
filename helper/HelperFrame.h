@@ -31,6 +31,8 @@ private:
     wxTextCtrl *m_pLogCtrl;
     wxLog *m_pOld;
     wxDataViewListCtrl *listCtrl;
+    wxTextCtrl *m_pNetmask;
+    wxTextCtrl *m_pGateway;
     int index;
     // 此处的ip是通过mdns扫描出来的ip
     std::map<uint64_t, struct in_addr> m_anc_ip;

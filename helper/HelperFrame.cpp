@@ -16,6 +16,15 @@ HelperFrame::HelperFrame(const wxString &title) : wxFrame(nullptr, wxID_ANY, tit
     listCtrl->AppendTextColumn(_T("Status"), wxDATAVIEW_CELL_INERT, wxCOL_WIDTH_AUTOSIZE, wxALIGN_CENTER);
     rootSizer->Add(listCtrl, wxSizerFlags(1).Expand().Border());
 
+    wxGridSizer *gridSizer = new wxGridSizer(2, 5, 10);
+    gridSizer->Add(new wxStaticText(panel, wxID_ANY, _T("Netmask: ")), wxSizerFlags().Align(wxALIGN_RIGHT | wxALIGN_CENTER_VERTICAL));
+    m_pNetmask = new wxTextCtrl(panel, wxID_ANY);
+    gridSizer->Add(m_pNetmask, wxSizerFlags(1).Align(wxGROW | wxALIGN_CENTER_VERTICAL));
+    gridSizer->Add(new wxStaticText(panel, wxID_ANY, _T("Gateway: ")), wxSizerFlags().Align(wxALIGN_RIGHT | wxALIGN_CENTER_VERTICAL));
+    m_pGateway = new wxTextCtrl(panel, wxID_ANY);
+    gridSizer->Add(m_pGateway, wxSizerFlags(1).Align(wxGROW | wxALIGN_CENTER_VERTICAL));
+    rootSizer->Add(gridSizer, wxSizerFlags().Expand().Border());
+
     m_pLogCtrl = new wxTextCtrl(panel, wxID_ANY, wxString(), wxDefaultPosition, wxDefaultSize, wxTE_MULTILINE);
     m_pLogCtrl->SetMinSize(wxSize(-1, 100));
     m_pOld = wxLog::SetActiveTarget(new wxLogTextCtrl(m_pLogCtrl));
@@ -34,7 +43,8 @@ HelperFrame::HelperFrame(const wxString &title) : wxFrame(nullptr, wxID_ANY, tit
     btnSizer->AddStretchSpacer(1);
 
     rootSizer->Add(btnSizer, wxSizerFlags().Border().Expand());
-    panel->SetSizerAndFit(rootSizer);
+    panel->SetSizer(rootSizer);
+    rootSizer->SetSizeHints(this);
 
     //Bind Thread Events to handers
     Bind(wxEVT_THREAD, &HelperFrame::OnAnchorFound, this, helper::ids::ANCHOR_FOUND);
