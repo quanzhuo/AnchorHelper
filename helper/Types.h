@@ -14,7 +14,7 @@ namespace helper
 
     namespace types
     {
-        using AnchorInfo = struct
+        struct AnchorInfo
         {
             uint64_t id;
             struct in_addr ip;
@@ -27,13 +27,13 @@ namespace helper
             SETTING_IP,
             DONE,
         };
-        using StatusInfo = struct
+        struct StatusInfo
         {
             uint64_t id;
             Status status;
         };
 
-        using cmd_staticaddr_t = struct
+        struct cmd_staticaddr_t
         {
             uint8_t command;
             uint8_t type;
@@ -41,7 +41,7 @@ namespace helper
             char addr[25];
         };
 
-        using cmd_use_staticaddr_t = struct
+        struct cmd_use_staticaddr_t
         {
             uint8_t command;
             uint8_t value;

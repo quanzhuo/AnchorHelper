@@ -68,8 +68,8 @@ void HelperFrame::OnBtnOk(wxCommandEvent &event)
     unsigned count = listCtrl->GetItemCount();
     for (unsigned i = 0; i < count; ++i)
     {
-        std::string id_str = listCtrl->GetTextValue(i, 1);
-        std::string ip_str = listCtrl->GetTextValue(i, 2);
+        std::string id_str = listCtrl->GetTextValue(i, 1).ToStdString();
+        std::string ip_str = listCtrl->GetTextValue(i, 2).ToStdString();
         std::stringstream ss;
         uint64_t id;
         ss.str(id_str);
@@ -127,7 +127,7 @@ void HelperFrame::OnProgressUpdate(wxThreadEvent &event)
     unsigned count = listCtrl->GetItemCount();
     for (unsigned i = 0; i < count; ++i)
     {
-        std::string id_str = listCtrl->GetTextValue(i, 1);
+        std::string id_str = listCtrl->GetTextValue(i, 1).ToStdString();
         std::stringstream ss;
         uint64_t id;
         ss.str(id_str);
