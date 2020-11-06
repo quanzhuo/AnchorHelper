@@ -132,54 +132,6 @@ void HelperFrame::OnBtnOk(wxCommandEvent &event)
     wxLogMessage("netmask: %s, gateway: %s", netmask.c_str(), gateway.c_str());
 
     (new TryConnect())->Start();
-
-    std::thread send_cmd([&] {
-        auto iter = DB::GetDB().Begin();
-        while (iter != DB::GetDB().End())
-        {
-            //1. set static ip mark
-            using namespace helper::types;
-            using namespace helper::cmds;
-            cmd_use_staticaddr_t use_static{ RTLS_USE_STATICADDR, 1, 1};
-            std::string str((char*)&use_static, sizeof use_static);
-            (*iter)->sock->SendBytes(str);
-
-            //2. set netmask
-            cmd_staticaddr_t set_netmask{ RTLS_SET_GET_STATICADDR, 2, 1, netmask};
-            str.assign((char*)&set_netmask, sizeof set_netmask);
-            (*iter)->sock->SendBytes(str);
-
-            //3. set gateway
-            cmd_staticaddr_t set_gateway{ RTLS_SET_GET_STATICADDR, 3, 1, gateway };
-            str.assign((char*)&set_gateway, sizeof set_gateway);
-            (*iter)->sock->SendBytes(str);
-
-            //4. set ip
-            cmd_staticaddr_t set_static_ip{ RTLS_SET_GET_STATICADDR, 1, 1, (*iter)->ip_set };
-            str.assign((char*)&set_static_ip, sizeof set_static_ip);
-            (*iter)->sock->SendBytes(str);
-
-            // 5. get static ip mark
-            use_static.sub_type = 0;
-            (*iter)->sock->SendBytes(str);
-
-            //6. get netmask
-            set_netmask.sub_type = 0;
-            (*iter)->sock->SendBytes(str);
-
-            //7. get gateway
-            set_gateway.sub_type = 0;
-            (*iter)->sock->SendBytes(str);
-
-            //8. get ip
-            set_static_ip.sub_type = 0;
-            (*iter)->sock->SendBytes(str);
-
-            ++iter;
-        }
-        }
-    );
-    send_cmd.detach();
 }
 
 bool HelperFrame::ConnectToAnchor(std::shared_ptr<helper::types::Anchor> pa)
