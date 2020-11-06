@@ -172,7 +172,7 @@ private:
 class AnchorConnection : public HandlerConnection<AnchorConnection>
 {
 public:
-	AnchorConnection(Socket *s, const helper::types::AnchorInfo &info);
+	AnchorConnection(Socket *s, std::shared_ptr<helper::types::Anchor> &pa);
 	virtual ~AnchorConnection() {}
 
 protected:
@@ -181,7 +181,7 @@ protected:
 	size_t HandleSetStaticAddr(const char *rxBytes, size_t length);
 
 private:
-	helper::types::AnchorInfo m_info;
+	std::shared_ptr<helper::types::Anchor> pa;
 };
 
 class TryConnect : public Thread

@@ -11,6 +11,8 @@
 #include "wx/dataview.h"
 #include "Connection.h"
 
+using helper::types::Anchor;
+
 class HelperFrame : public wxFrame
 {
     friend void TryConnect::Run();
@@ -18,10 +20,11 @@ class HelperFrame : public wxFrame
 public:
     HelperFrame(const wxString &title);
     ~HelperFrame();
-    bool ConnectToAnchor(helper::types::AnchorInfo &info);
+    bool ConnectToAnchor(std::shared_ptr<Anchor> pa);
 
 private:
     void OnAnchorFound(wxThreadEvent &event);
+    void OnAnchorRemoved(wxThreadEvent &event);
     void OnClearLog(wxCommandEvent &event);
     void OnBtnOk(wxCommandEvent &event);
     void OnProgressUpdate(wxThreadEvent &event);
@@ -34,8 +37,4 @@ private:
     wxTextCtrl *m_pNetmask;
     wxTextCtrl *m_pGateway;
     int index;
-    // 此处的ip是通过mdns扫描出来的ip
-    std::map<uint64_t, struct in_addr> m_anc_ip;
-    // 此处的ip是用户自己设置的ip
-    std::map<uint64_t, struct in_addr> m_anc_new_ip;
 };

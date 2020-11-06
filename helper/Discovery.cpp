@@ -3,6 +3,8 @@
 #include "SocketCompat.h"
 #include "Shutdown.h"
 #include "HelperApp.h"
+#include "DB.h"
+#include <sstream>
 
 #include <cstdio>
 #include <cstring>
@@ -111,9 +113,12 @@ void DNSSD_API Discovery::AddrInfoReply(DNSServiceRef sdref, const DNSServiceFla
     s->ip.s_addr = ntohl(s->ip.s_addr);
 
     wxLogMessage("Anchor %16llx found on %s", s->id, inet_ntoa(s->ip));
-    helper::types::AnchorInfo anc_info{s->id, s->ip};
+    using helper::types::Anchor;
+
+    std::shared_ptr<Anchor> anc = std::make_shared<Anchor>(s->id, s->ip);
+    DB::GetDB().AddAnchor(anc);
     wxThreadEvent event{wxEVT_THREAD, helper::ids::ANCHOR_FOUND};
-    event.SetPayload(anc_info);
+    event.SetPayload(anc);
     wxQueueEvent(wxGetApp().GetFrame(), event.Clone());
 
     if (sdref)
@@ -148,7 +153,8 @@ void DNSSD_API Discovery::ResolveReply(DNSServiceRef sdref, const DNSServiceFlag
             if (end > max)
                 break;
             if (++ptr < end)
-                wxLogMessage(" ");
+                ;
+            // wxLogMessage(" ");
 
             while (ptr < end)
             {
@@ -202,12 +208,29 @@ void DNSSD_API Discovery::BrowseReply(DNSServiceRef sdref, const DNSServiceFlags
 #ifdef _WIN32
     HeapSetInformation(NULL, HeapEnableTerminationOnCorruption, NULL, 0);
 #endif
-    wxLogMessage("FD: %d, OP: %s, NAME: %s, type: %s, domain: %s\n", DNSServiceRefSockFD(sdref), ((flags & kDNSServiceFlagsAdd) ? "Add" : "Remove"), replyName, replyType, replyDomain);
+    wxLogMessage("FD: %lld, OP: %s, NAME: %s, type: %s, domain: %s", DNSServiceRefSockFD(sdref), ((flags & kDNSServiceFlagsAdd) ? "Add" : "Remove"), replyName, replyType, replyDomain);
     if (flags & kDNSServiceFlagsAdd)
     {
         DNSServiceRef servRef = NULL;
         err = DNSServiceResolve(&servRef, 0, opinterface, s->name, s->type, s->domain, Discovery::ResolveReply, s);
         DNSServiceProcessResult(servRef);
+    }
+    else
+    {
+        //std::string id_str(replyName);
+        //id_str.erase(id_str.find(':'), 1);
+
+        //std::stringstream ss;
+        //uint64_t id;
+        //ss << std::hex;
+        //ss.str(id_str);
+        //ss >> id;
+
+        //DB::GetDB().RemoveAnchor(id);
+        //wxLogMessage("BrowseReply: %s", id_str);
+        //wxThreadEvent event{wxEVT_THREAD, helper::ids::ANCHOR_REMOVED};
+        //event.SetString(wxString(id_str));
+        //wxQueueEvent(wxGetApp().GetFrame(), event.Clone());
     }
 }
 

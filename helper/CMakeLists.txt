@@ -7,6 +7,7 @@ set(SRC
     Shutdown.cpp
     Connection.cpp
     crc16.cpp
+    DB.cpp
 )
 
 find_package(wxWidgets REQUIRED COMPONENTS base core adv)
