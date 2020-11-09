@@ -108,7 +108,7 @@ namespace helper
             in_addr GetIp()
             {
                 struct in_addr temp;
-                uint32_t i = ip1 + ip2 << 8 + ip3 << 16 + ip4 << 24;
+                uint32_t i = ip1 + (ip2 << 8) + (ip3 << 16) + (ip4 << 24);
                 memcpy(&temp, &i, 4);
                 return temp;
             }
@@ -116,7 +116,7 @@ namespace helper
             in_addr GetGW()
             {
                 struct in_addr temp;
-                uint32_t i = gw1 + gw2 << 8 + gw3 << 16 + gw4 << 24;
+                uint32_t i = gw1 + (gw2 << 8) + (gw3 << 16) + (gw4 << 24);
                 memcpy(&temp, &i, 4);
                 return temp;
             }
@@ -124,7 +124,7 @@ namespace helper
             in_addr GetNM()
             {
                 struct in_addr temp;
-                uint32_t i = nm1 + nm2 << 8 + nm3 << 16 + nm4 << 24;
+                uint32_t i = nm1 + (nm2 << 8) + (nm3 << 16) +( nm4 << 24);
                 memcpy(&temp, &i, 4);
                 return temp;
             }
