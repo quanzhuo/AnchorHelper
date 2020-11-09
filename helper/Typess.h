@@ -82,28 +82,51 @@ namespace helper
             uint8_t nm3;
             uint8_t nm4;
 
-            cmd_staticaddr_t(uint8_t type, in_addr& ip, in_addr& gw, in_addr& nm):command(0x92), sub_type(type),
-                ip1(ip.S_un.S_un_b.s_b1), ip2(ip.S_un.S_un_b.s_b2), ip3(ip.S_un.S_un_b.s_b3), ip4(ip.S_un.S_un_b.s_b4),
-                gw1(gw.S_un.S_un_b.s_b1), gw2(gw.S_un.S_un_b.s_b2), gw3(gw.S_un.S_un_b.s_b3), gw4(gw.S_un.S_un_b.s_b4),
-                nm1(nm.S_un.S_un_b.s_b1), nm2(nm.S_un.S_un_b.s_b2), nm3(nm.S_un.S_un_b.s_b3), nm4(nm.S_un.S_un_b.s_b4)
+            cmd_staticaddr_t(uint8_t type, in_addr &ip, in_addr &gw, in_addr &nm) : command(0x92), sub_type(type)
             {
+                uint32_t ip_int = *(uint32_t *)(&ip);
+                ip1 = ip_int & 0xff;
+                ip2 = (ip_int >> 8) & 0xff;
+                ip3 = (ip_int >> 16) & 0xff;
+                ip4 = (ip_int >> 24) & 0xff;
+
+                ip_int = *(uint32_t *)(&gw);
+                gw1 = ip_int & 0xff;
+                gw2 = (ip_int >> 8) & 0xff;
+                gw3 = (ip_int >> 16) & 0xff;
+                gw4 = (ip_int >> 24) & 0xff;
+
+                ip_int = *(uint32_t *)(&nm);
+                nm1 = ip_int & 0xff;
+                nm2 = (ip_int >> 8) & 0xff;
+                nm3 = (ip_int >> 16) & 0xff;
+                nm4 = (ip_int >> 24) & 0xff;
             }
 
             cmd_staticaddr_t(uint8_t type) :command(0x92), sub_type(type){}
 
             in_addr GetIp()
             {
-                return in_addr{ ip1, ip2, ip3, ip4 };
+                struct in_addr temp;
+                uint32_t i = ip1 + ip2 << 8 + ip3 << 16 + ip4 << 24;
+                memcpy(&temp, &i, 4);
+                return temp;
             }
 
             in_addr GetGW()
             {
-                return in_addr{ gw1, gw2, gw3, gw4 };
+                struct in_addr temp;
+                uint32_t i = gw1 + gw2 << 8 + gw3 << 16 + gw4 << 24;
+                memcpy(&temp, &i, 4);
+                return temp;
             }
 
             in_addr GetNM()
             {
-                return in_addr{nm1, nm2, nm3, nm4};
+                struct in_addr temp;
+                uint32_t i = nm1 + nm2 << 8 + nm3 << 16 + nm4 << 24;
+                memcpy(&temp, &i, 4);
+                return temp;
             }
 
             std::string GetIPString()

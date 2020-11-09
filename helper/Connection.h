@@ -20,6 +20,7 @@
 #include <map>
 #include <stdint.h>
 #include <cstdio>
+#include <memory>
 
 template <class Child>
 class HandlerConnection : public Thread
