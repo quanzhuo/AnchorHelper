@@ -2,7 +2,7 @@
 
 #include <vector>
 #include <memory>
-#include "Types.h"
+#include "Typess.h"
 
 using helper::types::Anchor;
 
@@ -19,7 +19,8 @@ public:
     std::vector<std::shared_ptr<Anchor>>::iterator Begin() { return m_ancs.begin(); }
     std::vector<std::shared_ptr<Anchor>>::iterator End() { return m_ancs.end(); }
     static DB& GetDB();
-
+    std::string GetGWString() { return inet_ntoa(m_gateway); }
+    std::string GetNMString() {return inet_ntoa(m_netmask); }
 
 
 private:

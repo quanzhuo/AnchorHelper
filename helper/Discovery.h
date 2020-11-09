@@ -18,7 +18,7 @@ typedef struct in_addr IN_ADDR;
 #endif
 
 #include "HelperFrame.h"
-#include "Types.h"
+#include "Typess.h"
 
 class Discovery : public Thread
 {

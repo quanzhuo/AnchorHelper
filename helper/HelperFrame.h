@@ -1,7 +1,7 @@
 #pragma once
 
 #include <map>
-#include "Types.h"
+#include "Typess.h"
 
 #include "wx/wxprec.h"
 #ifndef WX_PRECOMP

@@ -1,7 +1,7 @@
 #include "HelperApp.h"
 #include "HelperFrame.h"
 #include "Connection.h"
-#include "Types.h"
+#include "Typess.h"
 #include "DB.h"
 
 #include "wx/wxprec.h"
@@ -15,8 +15,8 @@ AnchorConnection::AnchorConnection(Socket *s, std::shared_ptr<helper::types::Anc
 {
     using namespace helper::cmds;
     using namespace helper::cons;
-    addHandler(RTLS_SET_GET_STATICADDR, RTLS_SET_GET_STATICADDR_LEN, &AnchorConnection::HandleUseStaticAddr);
-    addHandler(RTLS_USE_STATICADDR, RTLS_USE_STATICADDR_LEN, &AnchorConnection::HandleSetStaticAddr);
+    addHandler(RTLS_USE_STATICADDR, RTLS_USE_STATICADDR_LEN, &AnchorConnection::HandleUseStaticAddr);
+    addHandler(RTLS_SET_GET_STATICADDR, RTLS_SET_GET_STATICADDR_LEN, &AnchorConnection::HandleSetStaticAddr);
 }
 
 void AnchorConnection::Run()
@@ -63,45 +63,16 @@ size_t AnchorConnection::HandleSetStaticAddr(const char *rxBytes, size_t length)
 
     wxThreadEvent event(wxEVT_THREAD, PROGRESS_UPDATE);
 
-    if (net_config->type == 1) //ip
+    wxLogMessage("received static addr, ip:%s, gw: %s, nm: %s", inet_ntoa(net_config->GetIp()), inet_ntoa(net_config->GetGW()), inet_ntoa(net_config->GetNM()));
+
+    if (net_config->GetIPString() == pa->GetIPString() &&
+        net_config->GetGWString() == DB::GetDB().GetGWString() &&
+        net_config->GetNMString() == DB::GetDB().GetNMString())
     {
-        char* ip_str = inet_ntoa(pa->ip_set);
-        if (!std::strcmp(ip_str, net_config->addr))
-        {
-            pa->status = Status::SET_STATIC_IP_OK;
-        }
-        else
-        {
-            pa->status = Status::SET_STATIC_IP_FAILED;
-        }
-    }
-    else if (net_config->type == 2) //netmask
-    {
-        char* netmask_str = inet_ntoa((DB::GetDB().GetNetmask()));
-        if (!std::strcmp(netmask_str, net_config->addr))
-        {
-            pa->status = Status::SET_NETMASK_OK;
-        }
-        else
-        {
-            pa->status = Status::SET_NETMASK_FAILED;
-        }
-    }
-    else if (net_config->type == 3) //gateway
-    {
-        char* gateway_str = inet_ntoa((DB::GetDB().GetGateway()));
-        if (!std::strcmp(gateway_str, net_config->addr))
-        {
-            pa->status = Status::SET_GATEWAY_OK;
-        }
-        else
-        {
-            pa->status = Status::SET_GATEWAY_FAILED;
-        }
+        pa->status = Status::SET_STATIC_IP_OK;
     }
 
     event.SetPayload(pa);
-
     wxQueueEvent(wxGetApp().GetFrame(), event.Clone());
 
     return length;
@@ -137,44 +108,24 @@ void TryConnect::Run()
     iter = DB::GetDB().Begin();
     while (iter != DB::GetDB().End())
     {
-        //1. set static ip mark
         using namespace helper::types;
-        using namespace helper::cmds;
-        cmd_use_staticaddr_t use_static{ RTLS_USE_STATICADDR, 1, 1 };
-        std::string str((char*)&use_static, sizeof use_static);
-        (*iter)->sock->SendBytes(str);
+        //1. Set static ip
+        if (!(*iter)->sock)
+        {
+            ++iter;
+            continue;
+        }
+        cmd_staticaddr_t cmd{ 1, (*iter)->ip_set, DB::GetDB().GetGateway(), DB::GetDB().GetNetmask() };
+        std::string cmd_str((char*)&cmd, sizeof cmd);
+        (*iter)->sock->SendBytes(cmd_str);
 
-        //2. set netmask
+        // sleep a while
+        wxMilliSleep(1000);
 
-        cmd_staticaddr_t set_netmask{ RTLS_SET_GET_STATICADDR, 2, 1, DB::GetDB().GetNetmask() };
-        str.assign((char*)&set_netmask, sizeof set_netmask);
-        (*iter)->sock->SendBytes(str);
-
-        //3. set gateway
-        cmd_staticaddr_t set_gateway{ RTLS_SET_GET_STATICADDR, 3, 1, DB::GetDB().GetGateway() };
-        str.assign((char*)&set_gateway, sizeof set_gateway);
-        (*iter)->sock->SendBytes(str);
-
-        //4. set ip
-        cmd_staticaddr_t set_static_ip{ RTLS_SET_GET_STATICADDR, 1, 1, (*iter)->ip_set };
-        str.assign((char*)&set_static_ip, sizeof set_static_ip);
-        (*iter)->sock->SendBytes(str);
-
-        // 5. get static ip mark
-        use_static.sub_type = 0;
-        (*iter)->sock->SendBytes(str);
-
-        //6. get netmask
-        set_netmask.sub_type = 0;
-        (*iter)->sock->SendBytes(str);
-
-        //7. get gateway
-        set_gateway.sub_type = 0;
-        (*iter)->sock->SendBytes(str);
-
-        //8. get ip
-        set_static_ip.sub_type = 0;
-        (*iter)->sock->SendBytes(str);
+        //2. Get
+        cmd_staticaddr_t cmd_get{ 0 };
+        std::string cmd_str_get((char*)&cmd_get, sizeof cmd_get);
+        (*iter)->sock->SendBytes(cmd_str_get);
 
         ++iter;
     }

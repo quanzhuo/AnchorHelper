@@ -140,14 +140,14 @@ void HelperFrame::OnBtnOk(wxCommandEvent &event)
 
 bool HelperFrame::ConnectToAnchor(std::shared_ptr<helper::types::Anchor> pa)
 {
-    wxLogMessage("Connect to anchor, id: %llx, ip: %s", pa->id, inet_ntoa(pa->ip_set));
+    wxLogMessage("Connect to anchor, id: %llx, ip: %s", pa->id, inet_ntoa(pa->ip));
 
     bool ret = true;
     // pthread_mutex_lock(&lock);
 
     sockaddr_in addr;
     addr.sin_family = AF_INET;
-    addr.sin_addr = pa->ip_set;
+    addr.sin_addr = pa->ip;
     addr.sin_port = htons(3000);
 
     try
