@@ -5,6 +5,8 @@
 #include <thread>
 #include "DB.h"
 
+#include "wx/regex.h"
+
 HelperFrame::HelperFrame(const wxString &title) : wxFrame(nullptr, wxID_ANY, title), index(1)
 {
     wxPanel *panel = new wxPanel(this, wxID_ANY);
@@ -101,6 +103,8 @@ void HelperFrame::OnClearLog(wxCommandEvent &event)
 
 void HelperFrame::OnBtnOk(wxCommandEvent &event)
 {
+    // check if ip is valid
+    if (!VerifyInput()) return;
     // store ip
     unsigned count = listCtrl->GetItemCount();
     for (unsigned i = 0; i < count; ++i)
@@ -239,4 +243,44 @@ wxString HelperFrame::GetStatusText(helper::types::Status s)
         break;
     }
     return text;
+}
+
+bool HelperFrame::IsIPValid(const wxString& ip)
+{
+    wxRegEx pattern("^[[:digit:]]{1,3}\.[[:digit:]]{1,3}\.[[:digit:]]{1,3}\.[[:digit:]]{1,3}$");
+    bool b = pattern.IsValid();
+    if (pattern.Matches(ip)) return true;
+    return false;
+}
+
+bool HelperFrame::VerifyInput()
+{
+    using namespace helper::cons;
+    for (auto i = 0; i < listCtrl->GetItemCount(); ++i)
+    {
+        wxString ip = listCtrl->GetTextValue(i, COL_IDX_IP_ADDR);
+        if (!IsIPValid(ip))
+        {
+            ip.Append(" is not a valid ip");
+            wxMessageBox(ip, _T("Warnning"));
+            return false;
+        }
+    }
+
+    wxString netmask = m_pNetmask->GetValue();
+    wxString gateway = m_pGateway->GetValue();
+
+    if (!IsIPValid(netmask))
+    {
+        wxMessageBox(_T("netmask is invalid"), _T("Warnning"));
+        return false;
+    }
+
+    if (!IsIPValid(gateway))
+    {
+        wxMessageBox(_T("gateway is invalid"), _T("Warnning"));
+        return false;
+    }
+
+    return true;
 }

@@ -29,6 +29,8 @@ private:
     void OnBtnOk(wxCommandEvent &event);
     void OnProgressUpdate(wxThreadEvent &event);
     wxString GetStatusText(helper::types::Status s);
+    bool IsIPValid(const wxString& ip);
+    bool VerifyInput();
 
 private:
     wxTextCtrl *m_pLogCtrl;
