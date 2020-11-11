@@ -224,9 +224,6 @@ wxString HelperFrame::GetStatusText(helper::types::Status s)
     case Status::CONNECT_FAILED:
         text = _T("Connect Failed");
         break;
-    case Status::SETTING_IP:
-        text = _T("Setting IP");
-        break;
     case Status::STATIC_MARK_OK:
         text = _T("Static mark ok");
         break;
@@ -244,18 +241,6 @@ wxString HelperFrame::GetStatusText(helper::types::Status s)
         break;
     case Status::SET_STATIC_IP_FAILED:
         text = _T("Static IP Set failed");
-        break;
-    case Status::SET_NETMASK_OK:
-        text = _T("Set Netmask OK");
-        break;
-    case Status::SET_NETMASK_FAILED:
-        text = _T("Set Netmask failed");
-        break;
-    case Status::SET_GATEWAY_OK:
-        text = _T("Set gateway OK");
-        break;
-    case Status::SET_GATEWAY_FAILED:
-        text = _T("Set gateway failed");
         break;
     case Status::DONE:
         text = _T("Done");
