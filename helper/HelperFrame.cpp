@@ -117,6 +117,7 @@ void HelperFrame::OnBtnOk(wxCommandEvent& event)
     {
         std::string id_str = listCtrl->GetTextValue(i, helper::cons::COL_IDX_ANC_ID).ToStdString();
         std::string ip_str = listCtrl->GetTextValue(i, helper::cons::COL_IDX_IP_ADDR).ToStdString();
+        bool selected = listCtrl->GetToggleValue(i, helper::cons::COL_IDX_SELECTED);
         std::stringstream ss;
         uint64_t id;
         ss << std::hex;
@@ -126,7 +127,11 @@ void HelperFrame::OnBtnOk(wxCommandEvent& event)
         struct in_addr ip;
         memcpy(&ip, &ip_int, 4);
         auto pa = DB::GetDB().FindAnchor(id);
-        if (pa) pa->ip_set = ip;
+        if (pa)
+        {
+            pa->ip_set = ip;
+            pa->selected = selected;
+        }
     }
 
     // store netmask and gateway
@@ -264,6 +269,7 @@ bool HelperFrame::VerifyInput()
     using namespace helper::cons;
     for (auto i = 0; i < listCtrl->GetItemCount(); ++i)
     {
+        if (!listCtrl->GetToggleValue(i, helper::cons::COL_IDX_SELECTED)) continue;
         wxString ip = listCtrl->GetTextValue(i, COL_IDX_IP_ADDR);
         if (!IsIPValid(ip))
         {

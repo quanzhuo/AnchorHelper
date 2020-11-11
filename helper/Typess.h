@@ -38,19 +38,9 @@ namespace helper
             Status status;
             Socket* sock;
 
-            bool b_mark_set = false;
-            bool b_ip_set = false;
-            bool b_netmask_set = false;
-            bool b_gateway_set = false;
-
             Anchor(uint64_t id_, in_addr ip_, in_addr ip_set_ = { 0 }, bool selected_ = true, Status status_ = Status::CONNECTED, Socket *sock_=nullptr) :
                 id(id_), ip(ip_), ip_set(ip_set_), selected(selected_), status(status_), sock(sock_)
             {
-            }
-
-            bool SetOk()
-            {
-                return b_mark_set && b_ip_set && b_netmask_set && b_gateway_set;
             }
 
             std::string GetIPString()

@@ -99,14 +99,16 @@ void TryConnect::Run()
 {
     HelperFrame* frame = wxGetApp().GetFrame();
 
+    // connect to all selected anchors that haven't connected
     auto iter = DB::GetDB().Begin();
     while (iter != DB::GetDB().End())
     {
-        if ((*iter)->sock)
+        if (!(*iter)->selected || (*iter)->sock)
         {
             ++iter;
             continue;
         }
+
         if (frame->ConnectToAnchor(*iter))
         {
             (*iter)->status = helper::types::Status::CONNECTED;
@@ -122,13 +124,15 @@ void TryConnect::Run()
         ++iter;
     }
 
+
+    // send command
     iter = DB::GetDB().Begin();
     while (iter != DB::GetDB().End())
     {
         using namespace helper::types;
 
-        // first check whether the socket is established
-        if (!(*iter)->sock)
+        // first check whether anchor is selected and the socket is established
+        if (!(*iter)->selected || !(*iter)->sock)
         {
             ++iter;
             continue;
