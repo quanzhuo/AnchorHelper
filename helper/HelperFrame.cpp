@@ -7,27 +7,31 @@
 
 #include "wx/regex.h"
 
-HelperFrame::HelperFrame(const wxString &title) : wxFrame(nullptr, wxID_ANY, title), index(1)
+HelperFrame::HelperFrame(const wxString& title) : wxFrame(nullptr, wxID_ANY, title), index(1)
 {
-    wxPanel *panel = new wxPanel(this, wxID_ANY);
-    wxSizer *rootSizer = new wxBoxSizer(wxVERTICAL);
+    wxPanel* panel = new wxPanel(this, wxID_ANY);
+    wxSizer* rootSizer = new wxBoxSizer(wxVERTICAL);
 
-    listCtrl = new wxDataViewListCtrl(panel, wxID_ANY);
-
+    listCtrl = new wxDataViewListCtrl(panel, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxDV_ROW_LINES);
     listCtrl->AppendTextColumn(_T("Index"), wxDATAVIEW_CELL_INERT, wxCOL_WIDTH_AUTOSIZE, wxALIGN_CENTER);
     listCtrl->AppendToggleColumn(_T("Selected"), wxDATAVIEW_CELL_ACTIVATABLE, wxCOL_WIDTH_AUTOSIZE, wxALIGN_CENTER);
     listCtrl->AppendTextColumn(_T("Anchor ID"), wxDATAVIEW_CELL_INERT, wxCOL_WIDTH_AUTOSIZE, wxALIGN_CENTER);
-    listCtrl->AppendTextColumn(_T("IP Address"), wxDATAVIEW_CELL_EDITABLE, wxCOL_WIDTH_AUTOSIZE, wxALIGN_CENTER);
+    listCtrl->AppendTextColumn(_T("IP Address"), wxDATAVIEW_CELL_EDITABLE, 120, wxALIGN_CENTER);
     listCtrl->AppendTextColumn(_T("Status"), wxDATAVIEW_CELL_INERT, wxCOL_WIDTH_AUTOSIZE, wxALIGN_CENTER);
+    listCtrl->SetMinSize(wxSize(580, 250));
     rootSizer->Add(listCtrl, wxSizerFlags(1).Expand().Border());
 
-    wxGridSizer *gridSizer = new wxGridSizer(2, 5, 10);
+    wxGridSizer* gridSizer = new wxGridSizer(2, 5, 10);
     gridSizer->Add(new wxStaticText(panel, wxID_ANY, _T("Netmask: ")), wxSizerFlags().Align(wxALIGN_RIGHT | wxALIGN_CENTER_VERTICAL));
     m_pNetmask = new wxTextCtrl(panel, wxID_ANY);
     gridSizer->Add(m_pNetmask, wxSizerFlags(1).Align(wxGROW | wxALIGN_CENTER_VERTICAL));
     gridSizer->Add(new wxStaticText(panel, wxID_ANY, _T("Gateway: ")), wxSizerFlags().Align(wxALIGN_RIGHT | wxALIGN_CENTER_VERTICAL));
     m_pGateway = new wxTextCtrl(panel, wxID_ANY);
     gridSizer->Add(m_pGateway, wxSizerFlags(1).Align(wxGROW | wxALIGN_CENTER_VERTICAL));
+    gridSizer->Add(new wxStaticText(panel, wxID_ANY, _T("Use DHCP: ")), wxSizerFlags().Align(wxALIGN_RIGHT | wxALIGN_CENTER_VERTICAL));
+    m_pUseDHCP = new wxCheckBox(panel, wxID_ANY, "");
+    m_pUseDHCP->Bind(wxEVT_CHECKBOX, &HelperFrame::OnChkBoxClicked, this);
+    gridSizer->Add(m_pUseDHCP, wxSizerFlags().Align(wxALIGN_LEFT));
     rootSizer->Add(gridSizer, wxSizerFlags().Expand().Border());
 
     m_pLogCtrl = new wxTextCtrl(panel, wxID_ANY, wxString(), wxDefaultPosition, wxDefaultSize, wxTE_MULTILINE);
@@ -36,11 +40,11 @@ HelperFrame::HelperFrame(const wxString &title) : wxFrame(nullptr, wxID_ANY, tit
     wxLogMessage("This is the log window");
     rootSizer->Add(m_pLogCtrl, wxSizerFlags().Expand().Border());
 
-    wxSizer *btnSizer = new wxBoxSizer(wxHORIZONTAL);
-    wxButton *btnOk = new wxButton(panel, wxID_OK);
+    wxSizer* btnSizer = new wxBoxSizer(wxHORIZONTAL);
+    wxButton* btnOk = new wxButton(panel, wxID_OK);
     btnOk->Bind(wxEVT_BUTTON, &HelperFrame::OnBtnOk, this);
     //btnOk->Disable();
-    wxButton *btnClear = new wxButton(panel, wxID_CLEAR);
+    wxButton* btnClear = new wxButton(panel, wxID_CLEAR);
     btnClear->Bind(wxEVT_BUTTON, &HelperFrame::OnClearLog, this);
     btnSizer->AddStretchSpacer(1);
     btnSizer->Add(btnClear, wxSizerFlags().Border());
@@ -51,6 +55,7 @@ HelperFrame::HelperFrame(const wxString &title) : wxFrame(nullptr, wxID_ANY, tit
     rootSizer->Add(btnSizer, wxSizerFlags().Border().Expand());
     panel->SetSizer(rootSizer);
     rootSizer->SetSizeHints(this);
+    CenterOnScreen();
 
     //Bind Thread Events to handers
     Bind(wxEVT_THREAD, &HelperFrame::OnAnchorFound, this, helper::ids::ANCHOR_FOUND);
@@ -63,7 +68,7 @@ HelperFrame::~HelperFrame()
     delete wxLog::SetActiveTarget(m_pOld);
 }
 
-void HelperFrame::OnAnchorFound(wxThreadEvent &event)
+void HelperFrame::OnAnchorFound(wxThreadEvent& event)
 {
     auto pa = event.GetPayload<std::shared_ptr<helper::types::Anchor>>();
     wxVector<wxVariant> data;
@@ -78,7 +83,7 @@ void HelperFrame::OnAnchorFound(wxThreadEvent &event)
     listCtrl->AppendItem(data);
 }
 
-void HelperFrame::OnAnchorRemoved(wxThreadEvent &event)
+void HelperFrame::OnAnchorRemoved(wxThreadEvent& event)
 {
     auto wxstr_id = event.GetString();
     wxLogMessage("OnAnchorRemoved: anchor id: %s", wxstr_id);
@@ -96,15 +101,16 @@ void HelperFrame::OnAnchorRemoved(wxThreadEvent &event)
     }
 }
 
-void HelperFrame::OnClearLog(wxCommandEvent &event)
+void HelperFrame::OnClearLog(wxCommandEvent& event)
 {
     m_pLogCtrl->Clear();
 }
 
-void HelperFrame::OnBtnOk(wxCommandEvent &event)
+void HelperFrame::OnBtnOk(wxCommandEvent& event)
 {
     // check if ip is valid
-    if (!VerifyInput()) return;
+    if (!m_pUseDHCP->GetValue() && !VerifyInput()) return;
+
     // store ip
     unsigned count = listCtrl->GetItemCount();
     for (unsigned i = 0; i < count; ++i)
@@ -138,6 +144,15 @@ void HelperFrame::OnBtnOk(wxCommandEvent &event)
     (new TryConnect())->Start();
 }
 
+void HelperFrame::OnChkBoxClicked(wxCommandEvent& event)
+{
+    bool use_dhcp = m_pUseDHCP->GetValue();
+    m_pGateway->Enable(!use_dhcp);
+    m_pNetmask->Enable(!use_dhcp);
+    listCtrl->Enable(!use_dhcp);
+    DB::GetDB().SetUseDHCP(use_dhcp);
+}
+
 bool HelperFrame::ConnectToAnchor(std::shared_ptr<helper::types::Anchor> pa)
 {
     wxLogMessage("Connect to anchor, id: %llx, ip: %s", pa->id, inet_ntoa(pa->ip));
@@ -152,7 +167,7 @@ bool HelperFrame::ConnectToAnchor(std::shared_ptr<helper::types::Anchor> pa)
 
     try
     {
-        Socket *sock;
+        Socket* sock;
         try
         {
             sock = new SocketClient(addr);
@@ -162,7 +177,7 @@ bool HelperFrame::ConnectToAnchor(std::shared_ptr<helper::types::Anchor> pa)
             throw((std::string)("Socket error"));
         }
         pa->sock = sock;
-        AnchorConnection *conn = new AnchorConnection(sock, pa);
+        AnchorConnection* conn = new AnchorConnection(sock, pa);
         conn->Start();
     }
     catch (std::string e)
@@ -176,7 +191,7 @@ bool HelperFrame::ConnectToAnchor(std::shared_ptr<helper::types::Anchor> pa)
     return ret;
 }
 
-void HelperFrame::OnProgressUpdate(wxThreadEvent &event)
+void HelperFrame::OnProgressUpdate(wxThreadEvent& event)
 {
     auto info = event.GetPayload<std::shared_ptr<helper::types::Anchor>>();
     unsigned count = listCtrl->GetItemCount();
@@ -217,6 +232,12 @@ wxString HelperFrame::GetStatusText(helper::types::Status s)
         break;
     case Status::STATIC_MARK_FAILED:
         text = _T("Static mark failed");
+        break;
+    case Status::DYNAMIC_MARK_OK:
+        text = _T("Dynamic mark ok");
+        break;
+    case Status::DYNAMIC_MARK_FAILED:
+        text = _T("Dynamic mark failed");
         break;
     case Status::SET_STATIC_IP_OK:
         text = _T("Static IP Set OK");

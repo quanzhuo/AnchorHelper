@@ -11,7 +11,7 @@
 
 wxDECLARE_APP(HelperApp);
 
-AnchorConnection::AnchorConnection(Socket *s, std::shared_ptr<helper::types::Anchor> &anc) : HandlerConnection(s), pa(anc)
+AnchorConnection::AnchorConnection(Socket* s, std::shared_ptr<helper::types::Anchor>& anc) : HandlerConnection(s), pa(anc)
 {
     using namespace helper::cmds;
     using namespace helper::cons;
@@ -35,7 +35,7 @@ void AnchorConnection::Run()
     delete this; // Self destruct the instance once the connection is closed
 }
 
-size_t AnchorConnection::HandleUseStaticAddr(const char *rxBytes, size_t length)
+size_t AnchorConnection::HandleUseStaticAddr(const char* rxBytes, size_t length)
 {
     using namespace helper::types;
     using namespace helper::ids;
@@ -43,19 +43,36 @@ size_t AnchorConnection::HandleUseStaticAddr(const char *rxBytes, size_t length)
 
     wxThreadEvent event(wxEVT_THREAD, PROGRESS_UPDATE);
 
-    if (use_static->value)
-        pa->status = Status::STATIC_MARK_OK;
+
+    if (DB::GetDB().IsUseDHCP())
+    {
+        if (use_static->value)
+        {
+            pa->status = Status::DYNAMIC_MARK_FAILED;
+        }
+        else
+        {
+            pa->status = Status::DYNAMIC_MARK_OK;
+        }
+    }
     else
-        pa->status = Status::STATIC_MARK_FAILED;
+    {
+        if (use_static->value)
+        {
+            pa->status = Status::STATIC_MARK_OK;
+        }
+        else
+        {
+            pa->status = Status::STATIC_MARK_FAILED;
+        }
+    }
 
     event.SetPayload(pa);
-
     wxQueueEvent(wxGetApp().GetFrame(), event.Clone());
-
     return length;
 }
 
-size_t AnchorConnection::HandleSetStaticAddr(const char *rxBytes, size_t length)
+size_t AnchorConnection::HandleSetStaticAddr(const char* rxBytes, size_t length)
 {
     using namespace helper::types;
     using namespace helper::ids;
@@ -109,23 +126,43 @@ void TryConnect::Run()
     while (iter != DB::GetDB().End())
     {
         using namespace helper::types;
-        //1. Set static ip
+
+        // first check whether the socket is established
         if (!(*iter)->sock)
         {
             ++iter;
             continue;
         }
-        cmd_staticaddr_t cmd{ 1, (*iter)->ip_set, DB::GetDB().GetGateway(), DB::GetDB().GetNetmask() };
-        std::string cmd_str((char*)&cmd, sizeof cmd);
-        (*iter)->sock->SendBytes(cmd_str);
 
-        // sleep a while
-        wxMilliSleep(1000);
+        if (DB::GetDB().IsUseDHCP())
+        {
+            // set dhcp
+            cmd_use_staticaddr_t cmd{ 0x93, 0, 1 };
+            std::string cmd_str((char*)&cmd, sizeof cmd);
+            (*iter)->sock->SendBytes(cmd_str);
 
-        //2. Get
-        cmd_staticaddr_t cmd_get{ 0 };
-        std::string cmd_str_get((char*)&cmd_get, sizeof cmd_get);
-        (*iter)->sock->SendBytes(cmd_str_get);
+            wxMilliSleep(1000);
+
+            // Get
+            cmd.sub_type = 0;
+            cmd_str.assign((char*)&cmd, sizeof cmd);
+            (*iter)->sock->SendBytes(cmd_str);
+        }
+        else
+        {
+            //1. Set static ip
+            cmd_staticaddr_t cmd{ 1, (*iter)->ip_set, DB::GetDB().GetGateway(), DB::GetDB().GetNetmask() };
+            std::string cmd_str((char*)&cmd, sizeof cmd);
+            (*iter)->sock->SendBytes(cmd_str);
+
+            // sleep a while
+            wxMilliSleep(1000);
+
+            //2. Get
+            cmd_staticaddr_t cmd_get{ 0 };
+            std::string cmd_str_get((char*)&cmd_get, sizeof cmd_get);
+            (*iter)->sock->SendBytes(cmd_str_get);
+        }
 
         ++iter;
     }

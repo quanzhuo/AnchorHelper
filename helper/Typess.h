@@ -23,6 +23,8 @@ namespace helper
             SETTING_IP,
             STATIC_MARK_OK,
             STATIC_MARK_FAILED,
+            DYNAMIC_MARK_OK,
+            DYNAMIC_MARK_FAILED,
             SET_STATIC_IP_OK,
             SET_STATIC_IP_FAILED,
             SET_NETMASK_OK,
