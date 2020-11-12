@@ -7,3 +7,5 @@ target_compile_definitions(pthread PUBLIC
 	PTW32_STATIC_LIB
 	HAVE_STRUCT_TIMESPEC
 )
+set_property(TARGET pthread PROPERTY
+  MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")

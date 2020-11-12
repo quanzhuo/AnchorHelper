@@ -1,24 +1,13 @@
-if(UNIX)
-    set(SRC
-        dnssd_clientlib.c
-        dnssd_clientstub.c
-        dnssd_ipc.c
-    )
-elseif(WIN32)
-    set(SRC
-        DebugServices.c
-        dnssd_clientlib.c
-        dnssd_clientstub.c
-        dnssd_ipc.c
-        GenLinkedList.c
-        dllmain.c
-    )
-endif()
+add_library(dnssd
+    dnssd_clientlib.c
+    dnssd_clientstub.c
+    dnssd_ipc.c
+    $<$<C_COMPILER_ID:MSVC>:DebugServices.c>
+    $<$<C_COMPILER_ID:MSVC>:GenLinkedList.c>
+    $<$<C_COMPILER_ID:MSVC>:dllmain.c>
+)
 
-add_library(dnssd ${SRC})
-
-if(WIN32)
-    target_link_libraries(dnssd PUBLIC ws2_32 iphlpapi)
+if(MSVC)
     target_compile_definitions(dnssd PUBLIC
         MDNS_DEBUGMSGS=0
         WIN32_LEAN_AND_MEAN
@@ -27,6 +16,9 @@ if(WIN32)
         _CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES=1
         NOT_HAVE_SA_LEN
     )
+    target_link_libraries(dnssd PUBLIC ws2_32 iphlpapi)
+    set_property(TARGET dnssd PROPERTY
+        MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 elseif(UNIX)
     target_compile_definitions(dnssd PUBLIC
         _GNU_SOURCE

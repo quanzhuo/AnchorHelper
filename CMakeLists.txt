@@ -1,4 +1,5 @@
 cmake_minimum_required(VERSION 3.8)
+cmake_policy(SET CMP0091 NEW)
 project(AnchorHelper
         VERSION 0.1
         LANGUAGES C CXX)

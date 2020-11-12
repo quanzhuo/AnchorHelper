@@ -26,6 +26,8 @@ if(MSVC)
     __MSVS2015__
     _WINSOCK_DEPRECATED_NO_WARNINGS
     )
+    set_property(TARGET AnchorHelper PROPERTY
+        MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 elseif(UNIX)
     target_include_directories(AnchorHelper PRIVATE ../dnssd)
     target_compile_options(AnchorHelper PUBLIC -pthread)
