@@ -6,7 +6,7 @@
 
 #ifdef _WIN32
 #define DNSSD_API __stdcall
-#elif __linux__
+#elif defined(__linux__) || defined(__APPLE__)
 #include <netinet/in.h>
 #define DNSSD_API
 typedef struct in_addr IN_ADDR;

@@ -204,7 +204,7 @@ void shutdown_signal()
 	shutdown_pipe[1] = -1;
 }
 
-#ifdef __linux__
+#if defined(__linux__) || defined(__APPLE__)
 int shutdown_select_anc(SOCKET s, int timeout)
 {
 	return shutdown_select(s, timeout);
