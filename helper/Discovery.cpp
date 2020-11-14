@@ -112,10 +112,23 @@ void DNSSD_API Discovery::AddrInfoReply(DNSServiceRef sdref, const DNSServiceFla
     s->ip.s_addr = htonl(b->s_addr);
     s->ip.s_addr = ntohl(s->ip.s_addr);
 
-    wxLogMessage("Anchor %16llx found on %s", s->id, inet_ntoa(s->ip));
     using helper::types::Anchor;
+    uint64_t anchorid{};
 
-    std::shared_ptr<Anchor> anc = std::make_shared<Anchor>(s->id, s->ip);
+    // s->id is 0 on Apple device, which is weird
+#if __APPLE__
+    std::stringstream ss;
+    ss << std::hex;
+    std::string strid{s->name};
+    strid.erase(strid.find(':'), 1);
+    ss.str(strid);
+    ss >> anchorid;
+#else
+    anchorid = s->id;
+#endif
+
+    wxLogMessage("Anchor %16llx found on %s", anchorid, inet_ntoa(s->ip));
+    std::shared_ptr<Anchor> anc = std::make_shared<Anchor>(anchorid, s->ip);
     DB::GetDB().AddAnchor(anc);
     wxThreadEvent event{wxEVT_THREAD, helper::ids::ANCHOR_FOUND};
     event.SetPayload(anc);
