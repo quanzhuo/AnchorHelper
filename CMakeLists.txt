@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.8)
+cmake_minimum_required(VERSION 3.18)
 cmake_policy(SET CMP0091 NEW)
 project(AnchorHelper
         VERSION 0.1
@@ -23,22 +23,28 @@ add_subdirectory(helper)
 
 # set install prefix
 if(NOT WIN32 AND CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
-    set(CMAKE_INSTALL_PREFIX "/opt/com.zzdc/${PROJECT_NAME}")
+    set(CMAKE_INSTALL_PREFIX "/opt/zzdc/${PROJECT_NAME}")
 endif()
+
+message(STATUS ${CMAKE_INSTALL_PREFIX})
 
 if(NOT MSVC)
     install(TARGETS AnchorHelper
         RUNTIME
         DESTINATION ${CMAKE_INSTALL_BINDIR}
-        CONFIGURATIONS Release Debug
     )
+
+    set(CPACK_RPM_EXCLUDE_FROM_AUTO_FILELIST_ADDITION /usr/share/applications)
 
     if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
         install(FILES anchorhelper.desktop
-            DESTINATION /usr/share/applications/
+            DESTINATION share/applications/
         )
         install(FILES anchorhelper-linux.png
             TYPE DATA
+        )
+        install(FILES anchorhelper.desktop
+            DESTINATION /usr/share/applications
         )
     endif()
 
@@ -54,6 +60,7 @@ if(NOT MSVC)
         set(CPACK_GENERATOR DMG productbuild)
     elseif(CMAKE_SYSTEM_NAME STREQUAL "Linux")
         set(CPACK_GENERATOR RPM)
+        set(CPACK_PACKAGING_INSTALL_PREFIX "/opt/zzdc/${PROJECT_NAME}")
     endif()
 
     set(CPACK_RPM_FILE_NAME RPM-DEFAULT)
