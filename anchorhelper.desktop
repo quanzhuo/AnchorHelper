@@ -1,0 +1,10 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=AnchorHelper
+Comment=Anchor IP Setup
+Exec=/opt/AnchorHelper/bin/AnchorHelper
+Icon=/opt/AnchorHelper/share/anchorhelper-linux.png
+Terminal=false
+StartupNotify=true
+Categories=Utility;

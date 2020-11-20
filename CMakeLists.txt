@@ -12,8 +12,51 @@ set(CMAKE_C_STANDARD	99)
 set(CMAKE_C_STANDARD_REQUIRED ON)
 set(CMAKE_C_EXTENSIONS OFF)
 
+# include GNUInstallDirs to set misc CACHE variables
+include(GNUInstallDirs)
+
 add_subdirectory(dnssd)
 if(MSVC)
     add_subdirectory(pthread)
 endif()
 add_subdirectory(helper)
+
+# set install prefix
+if(NOT WIN32 AND CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
+    set(CMAKE_INSTALL_PREFIX "/opt/com.zzdc/${PROJECT_NAME}")
+endif()
+
+if(NOT MSVC)
+    install(TARGETS AnchorHelper
+        RUNTIME
+        DESTINATION ${CMAKE_INSTALL_BINDIR}
+        CONFIGURATIONS Release Debug
+    )
+
+    if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
+        install(FILES anchorhelper.desktop
+            DESTINATION /usr/share/applications/
+        )
+        install(FILES anchorhelper-linux.png
+            TYPE DATA
+        )
+    endif()
+
+    set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "Set static ip or use DHCP for anchor")
+    set(CPACK_PACKAGE_VENDOR "ZZDC")
+    set(CPACK_PACKAGE_VERSION_MAJOR ${PROJECT_VERSION_MAJOR})
+    set(CPACK_PACKAGE_VERSION_MINOR ${PROJECT_VERSION_MINOR})
+    set(CPACK_PACKAGE_VERSION_PATCH ${PROJECT_VERSION_PATCH})
+
+    set(CPACK_RPM_PACKAGE_LICENSE "ZZDC Copyright")
+
+    if(APPLE)
+        set(CPACK_GENERATOR DMG productbuild)
+    elseif(CMAKE_SYSTEM_NAME STREQUAL "Linux")
+        set(CPACK_GENERATOR RPM)
+    endif()
+
+    set(CPACK_RPM_FILE_NAME RPM-DEFAULT)
+    set(CPACK_RPM_PACKAGE_REQUIRES_PRE "wxGTK3, wxBase3")
+    include(CPack)
+endif()
