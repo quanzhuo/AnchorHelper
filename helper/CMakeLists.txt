@@ -12,7 +12,7 @@ set(SRC
 
 find_package(wxWidgets REQUIRED COMPONENTS base core adv)
 include(${wxWidgets_USE_FILE})
-add_executable(AnchorHelper WIN32 ${SRC})
+add_executable(AnchorHelper WIN32 MACOSX_BUNDLE ${SRC})
 target_link_libraries(AnchorHelper PRIVATE pthread dnssd ${wxWidgets_LIBRARIES})
 
 if(MSVC)

@@ -26,12 +26,10 @@ if(NOT WIN32 AND CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
     set(CMAKE_INSTALL_PREFIX "/opt/zzdc/${PROJECT_NAME}")
 endif()
 
-message(STATUS ${CMAKE_INSTALL_PREFIX})
-
 if(NOT MSVC)
     install(TARGETS AnchorHelper
-        RUNTIME
-        DESTINATION ${CMAKE_INSTALL_BINDIR}
+        BUNDLE DESTINATION .
+        RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
     )
 
     set(CPACK_RPM_EXCLUDE_FROM_AUTO_FILELIST_ADDITION /usr/share/applications)
@@ -46,6 +44,8 @@ if(NOT MSVC)
         install(FILES anchorhelper.desktop
             DESTINATION /usr/share/applications
         )
+    elseif(APPLE)
+
     endif()
 
     set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "Set static ip or use DHCP for anchor")
@@ -55,15 +55,24 @@ if(NOT MSVC)
     set(CPACK_PACKAGE_VERSION_PATCH ${PROJECT_VERSION_PATCH})
 
     set(CPACK_RPM_PACKAGE_LICENSE "ZZDC Copyright")
+    set(CPACK_RPM_FILE_NAME RPM-DEFAULT)
+    set(CPACK_RPM_PACKAGE_REQUIRES_PRE "wxGTK3, wxBase3")
+
+    set_target_properties(AnchorHelper PROPERTIES 
+        MACOSX_BUNDLE_BUNDLE_NAME ${CMAKE_PROJECT_NAME}
+        MACOSX_BUNDLE_BUNDLE_VERSION ${CMAKE_PROJECT_VERSION}
+        MACOSX_BUNDLE_COPYRIGHT "ZZDC Copyright"
+        MACOSX_BUNDLE_GUI_IDENTIFIER com.zzdc.anchorhelper
+        MACOSX_BUNDLE_SHORT_VERSION_STRING ${CMAKE_PROJECT_VERSION}
+        MACOSX_BUNDLE_ICON_FILE ${CMAKE_SOURCE_DIR}/anchorhelper-mac.icns
+    )
 
     if(APPLE)
-        set(CPACK_GENERATOR DMG productbuild)
+        set(CPACK_GENERATOR DragNDrop)
     elseif(CMAKE_SYSTEM_NAME STREQUAL "Linux")
         set(CPACK_GENERATOR RPM)
         set(CPACK_PACKAGING_INSTALL_PREFIX "/opt/zzdc/${PROJECT_NAME}")
     endif()
 
-    set(CPACK_RPM_FILE_NAME RPM-DEFAULT)
-    set(CPACK_RPM_PACKAGE_REQUIRES_PRE "wxGTK3, wxBase3")
     include(CPack)
 endif()
