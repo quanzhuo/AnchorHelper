@@ -64,7 +64,7 @@ if(NOT MSVC)
         MACOSX_BUNDLE_COPYRIGHT "ZZDC Copyright"
         MACOSX_BUNDLE_GUI_IDENTIFIER com.zzdc.anchorhelper
         MACOSX_BUNDLE_SHORT_VERSION_STRING ${CMAKE_PROJECT_VERSION}
-        MACOSX_BUNDLE_ICON_FILE ${CMAKE_SOURCE_DIR}/anchorhelper-mac.icns
+        MACOSX_BUNDLE_ICON_FILE anchorhelper-mac.icns
     )
 
     if(APPLE)
