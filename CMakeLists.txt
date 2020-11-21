@@ -69,6 +69,14 @@ if(NOT MSVC)
 
     if(APPLE)
         set(CPACK_GENERATOR DragNDrop)
+
+        # Note Mac specific extension .app
+        set(APPS "\${CMAKE_INSTALL_PREFIX}/${CMAKE_PROJECT_NAME}.app")
+        # Directories to look for dependencies
+        set(DIRS ${CMAKE_BINARY_DIR})
+        install(CODE "include(BundleUtilities)
+            fixup_bundle(\"${APPS}\" \"\" \"${DIRS}\")")
+
     elseif(CMAKE_SYSTEM_NAME STREQUAL "Linux")
         set(CPACK_GENERATOR RPM)
         set(CPACK_PACKAGING_INSTALL_PREFIX "/opt/zzdc/${PROJECT_NAME}")
