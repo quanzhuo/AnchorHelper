@@ -27,8 +27,10 @@ private:
     void OnAnchorRemoved(wxThreadEvent &event);
     void OnClearLog(wxCommandEvent &event);
     void OnBtnOk(wxCommandEvent &event);
+    void OnBtnAuto(wxCommandEvent &event);
     void OnChkBoxClicked(wxCommandEvent& event);
     void OnProgressUpdate(wxThreadEvent &event);
+    void OnScanIPFinished(wxThreadEvent &event);
     wxString GetStatusText(helper::types::Status s);
     bool IsIPValid(const wxString& ip);
     bool VerifyInput();
@@ -40,5 +42,6 @@ private:
     wxTextCtrl *m_pNetmask;
     wxTextCtrl *m_pGateway;
     wxCheckBox* m_pUseDHCP;
+    wxButton *m_pBtnAuto;
     int index;
 };

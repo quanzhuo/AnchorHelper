@@ -6,3 +6,4 @@ out/
 cmake-build-*/
 CMakeSettings.json
 CMakeLists.txt.user
+.DS_Store

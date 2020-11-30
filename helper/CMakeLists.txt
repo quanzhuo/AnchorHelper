@@ -8,6 +8,7 @@ set(SRC
     Connection.cpp
     crc16.cpp
     DB.cpp
+    tools.cpp
 )
 
 find_package(wxWidgets REQUIRED COMPONENTS base core adv)

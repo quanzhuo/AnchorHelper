@@ -1,7 +1,8 @@
 cmake_minimum_required(VERSION 3.18)
+set(CMAKE_OSX_DEPLOYMENT_TARGET "10.10" CACHE STRING "Minimum OS X deployment version" FORCE)
 cmake_policy(SET CMP0091 NEW)
 project(AnchorHelper
-        VERSION 0.1
+        VERSION 0.3
         LANGUAGES C CXX)
 
 set(CMAKE_CXX_STANDARD	11)
@@ -14,6 +15,10 @@ set(CMAKE_C_EXTENSIONS OFF)
 
 # include GNUInstallDirs to set misc CACHE variables
 include(GNUInstallDirs)
+
+if(APPLE)
+    set(CMAKE_INSTALL_RPATH @loader_path @loader_path/../Frameworks)
+endif()
 
 add_subdirectory(dnssd)
 if(MSVC)
@@ -58,7 +63,7 @@ if(NOT MSVC)
     set(CPACK_RPM_FILE_NAME RPM-DEFAULT)
     set(CPACK_RPM_PACKAGE_REQUIRES_PRE "wxGTK3, wxBase3")
 
-    set_target_properties(AnchorHelper PROPERTIES 
+    set_target_properties(AnchorHelper PROPERTIES
         MACOSX_BUNDLE_BUNDLE_NAME ${CMAKE_PROJECT_NAME}
         MACOSX_BUNDLE_BUNDLE_VERSION ${CMAKE_PROJECT_VERSION}
         MACOSX_BUNDLE_COPYRIGHT "ZZDC Copyright"
@@ -70,12 +75,15 @@ if(NOT MSVC)
     if(APPLE)
         set(CPACK_GENERATOR DragNDrop)
 
+        # 本来下面注释掉的语句应该是通用的打包依赖库的方法，但是木前有bug，导致打包失败。因此注释掉，
+        # 配合19至 21行硬编码的设置来打包。本来应该没有19-21行，只使用下面的语句来打包的。
+        #
         # Note Mac specific extension .app
-        set(APPS "\${CMAKE_INSTALL_PREFIX}/${CMAKE_PROJECT_NAME}.app")
+        #set(APPS "\${CMAKE_INSTALL_PREFIX}/${CMAKE_PROJECT_NAME}.app")
         # Directories to look for dependencies
-        set(DIRS ${CMAKE_BINARY_DIR})
-        install(CODE "include(BundleUtilities)
-            fixup_bundle(\"${APPS}\" \"\" \"${DIRS}\")")
+        #set(DIRS ${CMAKE_BINARY_DIR})
+        #install(CODE "include(BundleUtilities)
+        #    fixup_bundle(\"${APPS}\" \"\" \"${DIRS}\")")
 
     elseif(CMAKE_SYSTEM_NAME STREQUAL "Linux")
         set(CPACK_GENERATOR RPM)

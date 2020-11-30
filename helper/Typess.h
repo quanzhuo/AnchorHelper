@@ -12,6 +12,7 @@ namespace helper
         constexpr int ANCHOR_FOUND = 100;
         constexpr int ANCHOR_REMOVED = 101;
         constexpr int PROGRESS_UPDATE = 102;
+        constexpr int IP_SCAN_FINISHED = 103;
     } // namespace ids
 
     namespace types
@@ -36,10 +37,9 @@ namespace helper
             struct in_addr ip;
             struct in_addr ip_set;
             Status status;
-            Socket* sock;
+            Socket *sock;
 
-            Anchor(uint64_t id_, in_addr ip_, in_addr ip_set_ = { 0 }, bool selected_ = true, Status status_ = Status::CONNECTED, Socket *sock_=nullptr) :
-                id(id_), ip(ip_), ip_set(ip_set_), selected(selected_), status(status_), sock(sock_)
+            Anchor(uint64_t id_, in_addr ip_, in_addr ip_set_ = {0}, bool selected_ = true, Status status_ = Status::CONNECTED, Socket *sock_ = nullptr) : id(id_), ip(ip_), ip_set(ip_set_), selected(selected_), status(status_), sock(sock_)
             {
             }
 
@@ -90,7 +90,7 @@ namespace helper
                 nm4 = (ip_int >> 24) & 0xff;
             }
 
-            cmd_staticaddr_t(uint8_t type) :command(0x92), sub_type(type){}
+            cmd_staticaddr_t(uint8_t type) : command(0x92), sub_type(type) {}
 
             in_addr GetIp()
             {
@@ -111,7 +111,7 @@ namespace helper
             in_addr GetNM()
             {
                 struct in_addr temp;
-                uint32_t i = nm1 + (nm2 << 8) + (nm3 << 16) +( nm4 << 24);
+                uint32_t i = nm1 + (nm2 << 8) + (nm3 << 16) + (nm4 << 24);
                 memcpy(&temp, &i, 4);
                 return temp;
             }
@@ -138,6 +138,12 @@ namespace helper
             uint8_t value;
             uint8_t sub_type;
         };
+
+        struct scaned_ips
+        {
+            unsigned n;
+            std::string *ps;
+        };
     } // namespace types
 
     namespace cmds
@@ -156,5 +162,7 @@ namespace helper
         constexpr int COL_IDX_ANC_ID = 2;
         constexpr int COL_IDX_IP_ADDR = 3;
         constexpr int COL_IDX_STATUS = 4;
+
+        constexpr int BTN_ID_AUTO = 500;
     } // namespace cons
 } // namespace helper

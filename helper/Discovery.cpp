@@ -221,7 +221,7 @@ void DNSSD_API Discovery::BrowseReply(DNSServiceRef sdref, const DNSServiceFlags
 #ifdef _WIN32
     HeapSetInformation(NULL, HeapEnableTerminationOnCorruption, NULL, 0);
 #endif
-    wxLogMessage("FD: %lld, OP: %s, NAME: %s, type: %s, domain: %s", DNSServiceRefSockFD(sdref), ((flags & kDNSServiceFlagsAdd) ? "Add" : "Remove"), replyName, replyType, replyDomain);
+    wxLogMessage("FD: %d, OP: %s, NAME: %s, type: %s, domain: %s", DNSServiceRefSockFD(sdref), ((flags & kDNSServiceFlagsAdd) ? "Add" : "Remove"), replyName, replyType, replyDomain);
     if (flags & kDNSServiceFlagsAdd)
     {
         DNSServiceRef servRef = NULL;
