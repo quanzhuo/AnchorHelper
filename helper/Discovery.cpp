@@ -36,7 +36,7 @@ struct ServiceInfo
     uint64_t id;
 };
 
-static char *gettype(char *buffer, char *typ)
+static const char *gettype(char *buffer, const char *typ)
 {
     if (!typ || !*typ || (typ[0] == '.' && typ[1] == 0))
         typ = "_http._tcp";
@@ -100,9 +100,9 @@ void Discovery::HandleEvents()
 
 void DNSSD_API Discovery::AddrInfoReply(DNSServiceRef sdref, const DNSServiceFlags flags, uint32_t interfaceIndex, DNSServiceErrorType errorCode, const char *hostname, const struct sockaddr *address, uint32_t ttl, void *context)
 {
-    char addr[256] = "";
+//    char addr[256] = "";
     ServiceInfo *s = (ServiceInfo *)context;
-    DNSServiceFlags check_flags = flags;
+//    DNSServiceFlags check_flags = flags;
     IN_ADDR *b = 0;
 
     if (address && address->sa_family == AF_INET)
@@ -254,7 +254,8 @@ Discovery::Discovery(HelperFrame *helper)
 void Discovery::Run()
 {
     DNSServiceErrorType err = 0;
-    char buffer[TypeBufferSize], *typ;
+    char buffer[TypeBufferSize];
+    const char *typ;
 #ifdef _WIN32
     HeapSetInformation(NULL, HeapEnableTerminationOnCorruption, NULL, 0);
 #endif
