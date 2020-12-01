@@ -49,14 +49,14 @@ HelperFrame::HelperFrame(const wxString &title) : wxFrame(nullptr, wxID_ANY, tit
     wxButton *btnClear = new wxButton(panel, wxID_CLEAR);
     btnClear->Bind(wxEVT_BUTTON, &HelperFrame::OnClearLog, this);
     btnClear->SetToolTip(_T("Clear the log window"));
-    m_pBtnAuto = new wxButton(panel, helper::cons::BTN_ID_AUTO, _T("Populate IP"));
-    m_pBtnAuto->SetToolTip(_T("Populate static ip automatically!"));
-    m_pBtnAuto->Bind(wxEVT_BUTTON, &HelperFrame::OnBtnAuto, this);
+    m_pBtnPopulate = new wxButton(panel, helper::cons::BTN_ID_AUTO, _T("Populate IP"));
+    m_pBtnPopulate->SetToolTip(_T("Populate static ip automatically!"));
+    m_pBtnPopulate->Bind(wxEVT_BUTTON, &HelperFrame::OnBtnPopulate, this);
 
     btnSizer->AddStretchSpacer(1);
     btnSizer->Add(btnClear, wxSizerFlags().Border());
     btnSizer->AddStretchSpacer(1);
-    btnSizer->Add(m_pBtnAuto, wxSizerFlags().Border());
+    btnSizer->Add(m_pBtnPopulate, wxSizerFlags().Border());
     btnSizer->AddStretchSpacer(1);
     btnSizer->Add(btnOk, wxSizerFlags().Border());
     btnSizer->AddStretchSpacer(1);
@@ -178,13 +178,24 @@ void HelperFrame::OnBtnOk(wxCommandEvent &event)
     (new TryConnect())->Start();
 }
 
-void HelperFrame::OnBtnAuto(wxCommandEvent &event)
+void HelperFrame::OnBtnPopulate(wxCommandEvent &event)
 {
     auto count = listCtrl->GetItemCount();
-    if (!count)
+    if(!count) return;
+    int seleced_count{};
+    for(auto i=0; i<count; ++i)
+    {
+        bool selected = listCtrl->GetToggleValue(i, helper::cons::COL_IDX_SELECTED);
+        if(selected) ++seleced_count;
+    }
+    if (!seleced_count)
+    {
+        wxMessageBox(_T("Please select the anchors."), _T("Warning"), wxICON_WARNING, this);
         return;
+    }
+
     std::string ip_str = listCtrl->GetTextValue(0, helper::cons::COL_IDX_IP_ADDR).ToStdString();
-    std::thread task(ip_scan, ip_str, count);
+    std::thread task(ip_scan, ip_str, seleced_count);
     task.detach();
 }
 
@@ -193,7 +204,7 @@ void HelperFrame::OnChkBoxClicked(wxCommandEvent &event)
     bool use_dhcp = m_pUseDHCP->GetValue();
     m_pGateway->Enable(!use_dhcp);
     m_pNetmask->Enable(!use_dhcp);
-    m_pBtnAuto->Enable(!use_dhcp);
+    m_pBtnPopulate->Enable(!use_dhcp);
     listCtrl->Enable(!use_dhcp);
     DB::GetDB().SetUseDHCP(use_dhcp);
 }
@@ -260,9 +271,16 @@ void HelperFrame::OnProgressUpdate(wxThreadEvent &event)
 void HelperFrame::OnScanIPFinished(wxThreadEvent &event)
 {
     auto info = event.GetPayload<helper::types::scaned_ips>();
-    for (auto i = 0u; i < info.n; ++i)
+    int info_idx = 0;
+    auto rows = listCtrl->GetItemCount();
+    for (auto i = 0u; i < rows; ++i)
     {
-        listCtrl->SetTextValue(info.ps[i], i, helper::cons::COL_IDX_IP_ADDR);
+        bool selected = listCtrl->GetToggleValue(i, helper::cons::COL_IDX_SELECTED);
+        if (selected)
+        {
+            listCtrl->SetTextValue(info.ps[info_idx], i, helper::cons::COL_IDX_IP_ADDR);
+            ++info_idx;
+        }
     }
     delete[] info.ps;
 }
@@ -326,7 +344,7 @@ bool HelperFrame::VerifyInput()
         if (!IsIPValid(ip))
         {
             ip.Append(" is not a valid ip");
-            wxMessageBox(ip, _T("Warnning"));
+            wxMessageBox(ip, _T("Warning"), wxICON_WARNING, this);
             return false;
         }
     }
@@ -336,13 +354,13 @@ bool HelperFrame::VerifyInput()
 
     if (!IsIPValid(netmask))
     {
-        wxMessageBox(_T("netmask is invalid"), _T("Warnning"));
+        wxMessageBox(_T("netmask is invalid"), _T("Warning"), wxICON_WARNING, this);
         return false;
     }
 
     if (!IsIPValid(gateway))
     {
-        wxMessageBox(_T("gateway is invalid"), _T("Warnning"));
+        wxMessageBox(_T("gateway is invalid"), _T("Warning"), wxICON_WARNING, this);
         return false;
     }
 
