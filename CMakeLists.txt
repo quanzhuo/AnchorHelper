@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.18)
 set(CMAKE_OSX_DEPLOYMENT_TARGET "10.10" CACHE STRING "Minimum OS X deployment version" FORCE)
 cmake_policy(SET CMP0091 NEW)
 project(AnchorHelper
-        VERSION 0.3
+        VERSION 0.4
         LANGUAGES C CXX)
 
 set(CMAKE_CXX_STANDARD	11)

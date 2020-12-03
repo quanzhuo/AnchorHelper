@@ -164,19 +164,19 @@ void ip_scan(const std::string anc_ip, const unsigned n)
 #endif
     if (host_ip.empty())
     {
-        wxLogMessage("Can not determine host ip, Please do not click “Populate ip” button continuously");
+        wxLogMessage("Can not determine host ip, Please restart AnchorHelper");
         return;
     }
 
     std::string *ps = new std::string[n];
     IPIter ip_iter(host_ip, host_nm);
-    auto i = 0;
+    unsigned i = 0;
     while (ip_iter)
     {
         std::string ip = ip_iter.GetNext();
         if (ping(ip))
         {
-            wxLogMessage("Ip %s is in use, skip it", ip.c_str());
+            wxLogMessage("Ip %s is using, skip it", ip.c_str());
         }
         else
         {
@@ -187,7 +187,7 @@ void ip_scan(const std::string anc_ip, const unsigned n)
     }
 
     wxThreadEvent event(wxEVT_THREAD, helper::ids::IP_SCAN_FINISHED);
-    helper::types::scaned_ips info{n, ps};
+    helper::types::scaned_ips info{i, ps};
     event.SetPayload(info);
     wxQueueEvent(wxGetApp().GetFrame(), event.Clone());
 }

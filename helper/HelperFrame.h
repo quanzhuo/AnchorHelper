@@ -26,7 +26,7 @@ private:
     void OnAnchorFound(wxThreadEvent &event);
     void OnAnchorRemoved(wxThreadEvent &event);
     void OnClearLog(wxCommandEvent &event);
-    void OnBtnOk(wxCommandEvent &event);
+    void OnBtnApply(wxCommandEvent &event);
     void OnBtnPopulate(wxCommandEvent &event);
     void OnChkBoxClicked(wxCommandEvent& event);
     void OnProgressUpdate(wxThreadEvent &event);
@@ -34,6 +34,7 @@ private:
     wxString GetStatusText(helper::types::Status s);
     bool IsIPValid(const wxString& ip);
     bool VerifyInput();
+    uint64_t StringToUInt64(const std::string &id_str);
 
 private:
     wxTextCtrl *m_pLogCtrl;
@@ -43,5 +44,6 @@ private:
     wxTextCtrl *m_pGateway;
     wxCheckBox* m_pUseDHCP;
     wxButton *m_pBtnPopulate;
+    wxButton *m_pBtnApply;
     int index;
 };

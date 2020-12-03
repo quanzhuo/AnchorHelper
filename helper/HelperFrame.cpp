@@ -42,10 +42,9 @@ HelperFrame::HelperFrame(const wxString &title) : wxFrame(nullptr, wxID_ANY, tit
     rootSizer->Add(m_pLogCtrl, wxSizerFlags().Expand().Border());
 
     wxSizer *btnSizer = new wxBoxSizer(wxHORIZONTAL);
-    wxButton *btnOk = new wxButton(panel, wxID_APPLY);
-    btnOk->Bind(wxEVT_BUTTON, &HelperFrame::OnBtnOk, this);
-    btnOk->SetToolTip(_T("Click to set static/dhcp"));
-    //btnOk->Disable();
+    m_pBtnApply = new wxButton(panel, wxID_APPLY);
+    m_pBtnApply->Bind(wxEVT_BUTTON, &HelperFrame::OnBtnApply, this);
+    m_pBtnApply->SetToolTip(_T("Click to set static/dhcp"));
     wxButton *btnClear = new wxButton(panel, wxID_CLEAR);
     btnClear->Bind(wxEVT_BUTTON, &HelperFrame::OnClearLog, this);
     btnClear->SetToolTip(_T("Clear the log window"));
@@ -58,7 +57,7 @@ HelperFrame::HelperFrame(const wxString &title) : wxFrame(nullptr, wxID_ANY, tit
     btnSizer->AddStretchSpacer(1);
     btnSizer->Add(m_pBtnPopulate, wxSizerFlags().Border());
     btnSizer->AddStretchSpacer(1);
-    btnSizer->Add(btnOk, wxSizerFlags().Border());
+    btnSizer->Add(m_pBtnApply, wxSizerFlags().Border());
     btnSizer->AddStretchSpacer(1);
 
     rootSizer->Add(btnSizer, wxSizerFlags().Border().Expand());
@@ -134,7 +133,7 @@ void HelperFrame::OnClearLog(wxCommandEvent &event)
     m_pLogCtrl->Clear();
 }
 
-void HelperFrame::OnBtnOk(wxCommandEvent &event)
+void HelperFrame::OnBtnApply(wxCommandEvent &event)
 {
     // check if ip is valid
     if (!m_pUseDHCP->GetValue() && !VerifyInput())
@@ -176,6 +175,8 @@ void HelperFrame::OnBtnOk(wxCommandEvent &event)
     wxLogMessage("netmask: %s, gateway: %s", netmask.c_str(), gateway.c_str());
 
     (new TryConnect())->Start();
+    m_pBtnApply->Disable();
+    m_pBtnPopulate->Disable();
 }
 
 void HelperFrame::OnBtnPopulate(wxCommandEvent &event)
@@ -194,9 +195,13 @@ void HelperFrame::OnBtnPopulate(wxCommandEvent &event)
         return;
     }
 
-    std::string ip_str = listCtrl->GetTextValue(0, helper::cons::COL_IDX_IP_ADDR).ToStdString();
+    std::string id_str = listCtrl->GetTextValue(0, helper::cons::COL_IDX_ANC_ID).ToStdString();
+    uint64_t id = StringToUInt64(id_str);
+    std::string ip_str = DB::GetDB().FindAnchor(id)->GetIPString();
     std::thread task(ip_scan, ip_str, seleced_count);
     task.detach();
+    m_pBtnPopulate->Disable();
+    m_pBtnApply->Disable();
 }
 
 void HelperFrame::OnChkBoxClicked(wxCommandEvent &event)
@@ -249,16 +254,13 @@ bool HelperFrame::ConnectToAnchor(std::shared_ptr<helper::types::Anchor> pa)
 
 void HelperFrame::OnProgressUpdate(wxThreadEvent &event)
 {
+    bool finished{true};
     auto info = event.GetPayload<std::shared_ptr<helper::types::Anchor>>();
     unsigned count = listCtrl->GetItemCount();
     for (unsigned i = 0; i < count; ++i)
     {
         std::string id_str = listCtrl->GetTextValue(i, helper::cons::COL_IDX_ANC_ID).ToStdString();
-        std::stringstream ss;
-        uint64_t id;
-        ss << std::hex;
-        ss.str(id_str);
-        ss >> id;
+        uint64_t id = StringToUInt64(id_str);
         if (id == info->id)
         {
             wxString text = GetStatusText(info->status);
@@ -266,23 +268,48 @@ void HelperFrame::OnProgressUpdate(wxThreadEvent &event)
             break;
         }
     }
+
+    for(unsigned i=0; i<count; ++i)
+    {
+        bool selected = listCtrl->GetToggleValue(i, helper::cons::COL_IDX_SELECTED);
+        std::string id_str = listCtrl->GetTextValue(i, helper::cons::COL_IDX_ANC_ID).ToStdString();
+        uint64_t id = StringToUInt64(id_str);
+        auto pa = DB::GetDB().FindAnchor(id);
+        if (selected &&
+                ((pa->status != helper::types::Status::DYNAMIC_MARK_FAILED) &&
+                 (pa->status != helper::types::Status::DYNAMIC_MARK_OK) &&
+                 (pa->status != helper::types::Status::SET_STATIC_IP_FAILED) &&
+                 (pa->status != helper::types::Status::SET_STATIC_IP_OK)))
+        {
+            finished = false;
+            break;
+        }
+    }
+
+    if (finished)
+    {
+        m_pBtnApply->Enable();
+        m_pBtnPopulate->Enable();
+    }
 }
 
 void HelperFrame::OnScanIPFinished(wxThreadEvent &event)
 {
     auto info = event.GetPayload<helper::types::scaned_ips>();
-    int info_idx = 0;
+    unsigned info_idx = 0;
     auto rows = listCtrl->GetItemCount();
-    for (auto i = 0u; i < rows; ++i)
+    for (unsigned i = 0u; i < rows; ++i)
     {
         bool selected = listCtrl->GetToggleValue(i, helper::cons::COL_IDX_SELECTED);
-        if (selected)
+        if (selected && (info_idx < info.n))
         {
             listCtrl->SetTextValue(info.ps[info_idx], i, helper::cons::COL_IDX_IP_ADDR);
             ++info_idx;
         }
     }
     delete[] info.ps;
+    m_pBtnPopulate->Enable();
+    m_pBtnApply->Enable();
 }
 
 wxString HelperFrame::GetStatusText(helper::types::Status s)
@@ -291,11 +318,13 @@ wxString HelperFrame::GetStatusText(helper::types::Status s)
     wxString text;
     switch (s)
     {
+    case Status::NOT_CONNECTED:
+        text = _T("Not connected");
     case Status::CONNECTED:
         text = _T("Connected");
         break;
     case Status::CONNECT_FAILED:
-        text = _T("Connect Failed");
+        text = _T("Connect failed");
         break;
     case Status::STATIC_MARK_OK:
         text = _T("Static mark ok");
@@ -304,10 +333,10 @@ wxString HelperFrame::GetStatusText(helper::types::Status s)
         text = _T("Static mark failed");
         break;
     case Status::DYNAMIC_MARK_OK:
-        text = _T("Dynamic mark ok");
+        text = _T("DHCP mark ok");
         break;
     case Status::DYNAMIC_MARK_FAILED:
-        text = _T("Dynamic mark failed");
+        text = _T("DHCP mark failed");
         break;
     case Status::SET_STATIC_IP_OK:
         text = _T("Static IP Set OK");
@@ -365,4 +394,14 @@ bool HelperFrame::VerifyInput()
     }
 
     return true;
+}
+
+uint64_t HelperFrame::StringToUInt64(const std::string &id_str)
+{
+    std::stringstream ss;
+    uint64_t id;
+    ss << std::hex;
+    ss.str(id_str);
+    ss >> id;
+    return id;
 }

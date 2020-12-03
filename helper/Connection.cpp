@@ -67,7 +67,7 @@ size_t AnchorConnection::HandleUseStaticAddr(const char* rxBytes, size_t length)
         }
     }
 
-    event.SetPayload(pa);
+    event.SetPayload<std::shared_ptr<helper::types::Anchor>>(pa);
     wxQueueEvent(wxGetApp().GetFrame(), event.Clone());
     return length;
 }
@@ -80,9 +80,10 @@ size_t AnchorConnection::HandleSetStaticAddr(const char* rxBytes, size_t length)
 
     wxThreadEvent event(wxEVT_THREAD, PROGRESS_UPDATE);
 
-    wxLogMessage("received static addr, ip:%s, gw: %s, nm: %s", inet_ntoa(net_config->GetIp()), inet_ntoa(net_config->GetGW()), inet_ntoa(net_config->GetNM()));
+    wxLogMessage("received static addr, ip:%s, gw: %s, nm: %s",
+                 net_config->GetIPString().c_str(), net_config->GetGWString().c_str(), net_config->GetNMString().c_str());
 
-    if (net_config->GetIPString() == pa->GetIPString() &&
+    if (net_config->GetIPString() == pa->GetIPSetString() &&
         net_config->GetGWString() == DB::GetDB().GetGWString() &&
         net_config->GetNMString() == DB::GetDB().GetNMString())
     {

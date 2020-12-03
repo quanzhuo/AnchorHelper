@@ -19,6 +19,7 @@ namespace helper
     {
         enum class Status
         {
+            NOT_CONNECTED,
             CONNECTED,
             CONNECT_FAILED,
             STATIC_MARK_OK,
@@ -39,13 +40,18 @@ namespace helper
             Status status;
             Socket *sock;
 
-            Anchor(uint64_t id_, in_addr ip_, in_addr ip_set_ = {0}, bool selected_ = true, Status status_ = Status::CONNECTED, Socket *sock_ = nullptr) : id(id_), ip(ip_), ip_set(ip_set_), selected(selected_), status(status_), sock(sock_)
+            Anchor(uint64_t id_, in_addr ip_, in_addr ip_set_ = {0}, bool selected_ = true, Status status_ = Status::NOT_CONNECTED, Socket *sock_ = nullptr) : id(id_), ip(ip_), ip_set(ip_set_), selected(selected_), status(status_), sock(sock_)
             {
+            }
+
+            std::string GetIPSetString()
+            {
+                return inet_ntoa(ip_set);
             }
 
             std::string GetIPString()
             {
-                return inet_ntoa(ip_set);
+                return inet_ntoa(ip);
             }
         };
 
