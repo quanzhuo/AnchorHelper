@@ -78,6 +78,8 @@ public:
 		*/
 	bool SendBytes(const std::string &data);
 
+	bool SendFrame(const std::string &data);
+
 	/**
 		* Send data on the socket.
 		* @param data Bytes to Send

@@ -70,6 +70,8 @@ HelperFrame::HelperFrame(const wxString &title) : wxFrame(nullptr, wxID_ANY, tit
     Bind(wxEVT_THREAD, &HelperFrame::OnAnchorRemoved, this, helper::ids::ANCHOR_REMOVED);
     Bind(wxEVT_THREAD, &HelperFrame::OnProgressUpdate, this, helper::ids::PROGRESS_UPDATE);
     Bind(wxEVT_THREAD, &HelperFrame::OnScanIPFinished, this, helper::ids::IP_SCAN_FINISHED);
+
+    init_crc16();
 }
 
 HelperFrame::~HelperFrame()

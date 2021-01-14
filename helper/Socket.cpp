@@ -29,6 +29,7 @@
 #include <cstring>
 
 #include "Socket.h"
+#include "crc16.h"
 
 Socket::Socket() : s_(0)
 {
@@ -191,6 +192,21 @@ bool Socket::SendBytes(const std::string &s)
 	}
 
 	return iResult >= 0;
+}
+
+bool Socket::SendFrame(const std::string &data)
+{
+    uint8_t frame_begin = 0xA5;
+    std::string buf((const char*)(&frame_begin), sizeof frame_begin);
+    unsigned len = data.length(); // include function code
+    buf.append((const char*)&len, sizeof len);
+//    buf.append((const char*)&code, sizeof code);
+    buf.append(data);
+    uint16_t crc = calc_crc16_len32((uint8_t*)data.data(), data.length());
+    buf.append((const char*)&crc, sizeof crc);
+    uint8_t frame_end = 0x5A;
+    buf.append((const char*)&frame_end, sizeof frame_end);
+    return SendBytes(buf);
 }
 
 bool Socket::SendBytes(const char *s)

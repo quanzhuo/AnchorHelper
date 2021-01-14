@@ -102,7 +102,7 @@ protected:
 						if ((rxBytes.c_str())[flen + 5] == 0x3) //end of frame present
 						{
 							//received whole frame: check frame checksum here
-							pckt_crc = check_crc16((uint8_t *)&(rxBytes.c_str())[3], (flen + 2));
+							pckt_crc = check_crc16_len16((uint8_t *)&(rxBytes.c_str())[3], (flen + 2));
 							break;
 						}
 						else //no end of frame in the expected place - start byte was not real start

@@ -144,21 +144,21 @@ void TryConnect::Run()
             // set dhcp
             cmd_use_staticaddr_t cmd{ 0x93, 0, 1 };
             std::string cmd_str((char*)&cmd, sizeof cmd);
-            (*iter)->sock->SendBytes(cmd_str);
+            (*iter)->sock->SendFrame(cmd_str);
 
             wxMilliSleep(1000);
 
             // Get
             cmd.sub_type = 0;
             cmd_str.assign((char*)&cmd, sizeof cmd);
-            (*iter)->sock->SendBytes(cmd_str);
+            (*iter)->sock->SendFrame(cmd_str);
         }
         else
         {
             //1. Set static ip
             cmd_staticaddr_t cmd{ 1, (*iter)->ip_set, DB::GetDB().GetGateway(), DB::GetDB().GetNetmask() };
             std::string cmd_str((char*)&cmd, sizeof cmd);
-            (*iter)->sock->SendBytes(cmd_str);
+            (*iter)->sock->SendFrame(cmd_str);
 
             // sleep a while
             wxMilliSleep(1000);
@@ -166,7 +166,7 @@ void TryConnect::Run()
             //2. Get
             cmd_staticaddr_t cmd_get{ 0 };
             std::string cmd_str_get((char*)&cmd_get, sizeof cmd_get);
-            (*iter)->sock->SendBytes(cmd_str_get);
+            (*iter)->sock->SendFrame(cmd_str_get);
         }
 
         ++iter;

@@ -74,7 +74,7 @@ void init_table_crc16(void)
 * @param flen - frame length + 2 bytes of CRC
 *
 * */
-crc_err_t check_crc16(uint8_t *frame, uint16_t flen)
+crc_err_t check_crc16_len16(uint8_t *frame, uint16_t flen)
 {
 	uint8_t  crcHiRev, crcLoRev;
 	uint16_t crcvalue;
@@ -98,12 +98,39 @@ crc_err_t check_crc16(uint8_t *frame, uint16_t flen)
 	return (ret);
 }
 
+/* @brief check CRC16 of frame which includes a CRC
+* @param flen - frame length + 2 bytes of CRC
+*
+* */
+crc_err_t check_crc16_len32(uint8_t *frame, uint32_t flen)
+{
+	uint8_t crcHiRev, crcLoRev;
+	int16_t crcvalue;
+	uint32_t i;
+
+	crc_err_t ret = CRC_ERROR;
+	crcvalue = 0;
+
+	for (i = 0; i < flen - 2; i++)
+	{
+		crcvalue = crc16Table[(((crcvalue) >> 8) ^ reverseByte[frame[i]]) & 0xFF] ^ ((crcvalue) << 8);
+	}
+	crcHiRev = reverseByte[(crcvalue >> 8) & 0xFF];
+	crcLoRev = reverseByte[crcvalue & 0xFF];
+
+	if ((frame[flen - 1] == crcHiRev) && (frame[flen - 2] == crcLoRev))
+	{
+		ret = CRC_OKAY;
+	}
+
+	return (ret);
+}
 
 /* @brief calculates crc16 of frame
 * @param flen - frame length to calculate crc
 * @return crc16 value of frame
 * */
-uint16_t calc_crc16(uint8_t *frame, int16_t flen)
+uint16_t calc_crc16_len16(uint8_t *frame, int16_t flen)
 {
 	uint8_t crcHiRev, crcLoRev;
 	int16_t crcvalue;
@@ -119,4 +146,42 @@ uint16_t calc_crc16(uint8_t *frame, int16_t flen)
 	crcLoRev = reverseByte[crcvalue & 0xFF];
 
 	return ((crcHiRev << 8) + crcLoRev);
+}
+
+uint16_t calc_crc16_len32(uint8_t *frame, uint32_t flen)
+{
+	uint8_t crcHiRev, crcLoRev;
+	int16_t crcvalue;
+	uint32_t i;
+
+	crcvalue = 0;
+
+	for (i = 0; i < flen; i++)
+	{
+		crcvalue = crc16Table[(((crcvalue) >> 8) ^ reverseByte[frame[i]]) & 0xFF] ^ ((crcvalue) << 8);
+	}
+
+	crcHiRev = reverseByte[(crcvalue >> 8) & 0xFF];
+	crcLoRev = reverseByte[crcvalue & 0xFF];
+
+	return ((crcHiRev << 8) + crcLoRev);
+}
+
+int16_t get_crc16_from_value(int16_t crc_init_value, uint8_t *data, uint32_t flen)
+{
+    for(int i=0; i<flen; ++i)
+    {
+        crc_init_value = crc16Table[(((crc_init_value) >> 8) ^ reverseByte[data[i]]) & 0xFF] ^ ((crc_init_value) << 8);
+    }
+    return crc_init_value;
+}
+
+uint16_t get_crc16_final(int16_t crcvalue)
+{
+    uint8_t crcHiRev, crcLoRev;
+
+    crcHiRev = reverseByte[(crcvalue >> 8) & 0xFF];
+    crcLoRev = reverseByte[crcvalue & 0xFF];
+
+    return ((crcHiRev << 8) + crcLoRev);
 }
