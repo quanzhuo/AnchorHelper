@@ -18,6 +18,13 @@ include(GNUInstallDirs)
 
 if(APPLE)
     set(CMAKE_INSTALL_RPATH @loader_path @loader_path/../Frameworks)
+elseif(CMAKE_SYSTEM_NAME STREQUAL "Linux")
+    set(base $ORIGIN)
+    file(RELATIVE_PATH relDir
+            ${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_INSTALL_BINDIR}
+            ${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_INSTALL_LIBDIR}
+            )
+    set(CMAKE_INSTALL_RPATH ${base} ${base}/${relDir})
 endif()
 
 add_subdirectory(dnssd)
@@ -49,6 +56,11 @@ if(NOT MSVC)
         install(FILES anchorhelper.desktop
             DESTINATION /usr/share/applications
         )
+        install(FILES
+                    /usr/local/lib/libwx_baseu-3.1.so
+                    /usr/local/lib/libwx_gtk3u_core-3.1.so
+                    /usr/local/lib/libwx_gtk3u_adv-3.1.so
+                TYPE LIB)
     elseif(APPLE)
 
     endif()
